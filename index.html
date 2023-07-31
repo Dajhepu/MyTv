@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title></title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/javascript" href="script.js">
+  <script src='https://kit.fontawesome.com/a076d05399.js' crossorigin='anonymous'></script>
+   <link rel="icon" type="image/x-icon" href="images/mytv.jpg">
+</head>
+<body>
+<! --fire base -->
+
+        
+<!-- Firebase JavaScript pustakasini ulash -->
+<script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-firestore.js"></script>
+<!-- Boshqa Firebase xizmatlarini qo'shishingiz kerak bo'lsa, ularni ham shu yerdan ulashingiz mumkin -->
+
+
+  
+ 
+<div  class="tab-menu">
+  <a href="index.html"><button style="height: 50px; width: 111px; color: white;" class="tab-button active" data-tab="tab1">home</button></a>
+    <a href="qidiruv.html"><button style="height: 50px; width: 111px; color: white;" class="tab-button active" data-tab="tab2">search...</button></a>
+    <a href="index.html"><button style="height: 50px; width: 111px; color: white;" class="tab-button active" data-tab="tab3">TV</button></a>
+      <a  href=><button style="height: 0px; width: 0px; color: white;" class="dnx" data-tab="tab3">TV</button></a>
+</div>
+
+      <u style="color:white;"><h1 style="color: green;" >MyTV</h1></u>
+   
+<div id="overlay" class="overlay">
+        <img id="image" src="" alt="Overlay Image">
+        <div id="filmInfo">
+            <h3 id="filmTitle"></h3>
+             <a id="downloadButton" href="javascript:void(0);" onclick="openTelegram()">Download</a>
+            <br>
+            <br>
+            <button style="padding: 7px; color: white; border-radius: 7px; background-color: red;" onclick="hideOverlay()">Close</button>
+        </div>
+    </div>
+</div>
+
+    <style>
+       .overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.overlay.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#image {
+    max-width: 50%;
+    max-height: 50%;
+}
+
+#filmInfo {
+    color: white;
+    text-align: center;
+}
+
+  #downloadButton {
+        color: white;
+            background-color: #007bff;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            display: block;
+            margin-top: 10px;
+    </style>
+</head>
+<body>
+
+      <script>
+
+ function openTelegram() {
+    var telegramURL = "https://t.me/joinchat/https://t.me/MYTV_1BOT"; // Telegram linki (o'zgartiring: xxxxx o'rniga to'g'ri linkni qo'yin)
+    window.location.href = telegramURL;
+  }
+
+  function showOverlayAndOpenTelegram(imageSrc, filmData) {
+    showOverlay(imageSrc, filmData);
+    openTelegram();
+  }
+
+  function showOverlay(imageSrc, filmData) {
+    var overlay = document.getElementById("overlay");
+    var image = document.getElementById("image");
+    var filmTitle = document.getElementById("filmTitle");
+    var downloadButton = document.getElementById("downloadButton");
+
+    image.src = imageSrc;
+    image.alt = filmData.title;
+    filmTitle.textContent = filmData.title;
+    downloadButton.href = filmData.downloadLink;
+
+    overlay.classList.add("active");
+  }
+
+  function hideOverlay() {
+    var overlay = document.getElementById("overlay");
+    overlay.classList.remove("active");
+  }
+
+// Tarmoq holatini tekshirish funktsiyasi
+function checkNetworkStatus() {
+  if (navigator.onLine) {
+    // Tarmoq mavjud
+    // Dastur davomida kerakli amallarni bajaring
+  } else {
+    // Tarmoq yo'q
+    // Foydalanuvchiga xabar berish mumkin
+    alert("Tarmoq yo'q. Iltimos, internetga ulaning.");
+  }
+}
+
+// Dastur yuklandigida tarmoq holatini tekshirish
+checkNetworkStatus();
+
+    </script>
+
+ 
+<!--film rasmlari-->
+<h2 style="color:white;">famous</h2>
+   <div class="image-slider">
+
+<div id="overlay">
+        <div class="slider-container">
+ <div id="overlayContainer">
+    <p style="color:white;">
+    <img  style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' , downloadLink: 'https://t.me/MYTV_1BOT'})">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+</div>
+
+   <div id="overlay">
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/2.jpg" alt="Image" onclick="showOverlay('images/2.jpg', { title: 'Click to download and submit the code to download the movie. code /2', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT' })">Hypnotic (2023)</p>
+</div>
+      
+ <div id="overlay">     
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/3.jpg" alt="Image" onclick="showOverlay('images/3.jpg', { title: 'Click to download and submit the code to download the movie. code /3', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">The Black Demon (2023)</p>
+
+</div>
+
+<div id="overlay">
+
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/4.jpg" alt="Image" onclick="showOverlay('images/4.jpg', { title: 'Click to download and submit the code to download the movie. code /4', year: 'download'  ,  downloadLink: 'https://t.me/MYTV_1BOT' })">The Angry Black Girl and Her Monster (2023)</p>
+</div>
+
+<div id="overlay">
+
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/5.jpg" alt="Image" onclick="showOverlay('images/5.jpg', { title: 'Click to download and submit the code to download the movie. code /5', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">White Men Can't Jump (2023)</p>
+
+</div>
+
+          
+ <div id="overlay">             
+        
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/6.jpg" alt="Image" onclick="showOverlay('images/6.jpg', { title: 'Click to download and submit the code to download the movie. code /6', year: 'download'  ,  downloadLink: 'https://t.me/MYTV_1BOT' })">The Tank (2023)</p>
+
+</div>
+
+<div id="overlay">
+         
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/7.jpg" alt="Image" onclick="showOverlay('images/7.jpg', { title: 'Click to download and submit the code to download the movie. code /7', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Biosphere (2023)</p>
+
+ 
+</div>
+
+ <div id="overlay">
+
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/8.jpg" alt="Image" onclick="showOverlay('images/8.jpg', { title: 'Click to download and submit the code to download the movie. code /8', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Dead Shot (2023)</p>
+
+</div>
+
+  <div id="overlay">        
+              
+          
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/9.jpg" alt="Image" onclick="showOverlay('images/9.jpg', { title: 'Click to download and submit the code to download the movie. code /9', year: 'download'  ,  downloadLink: 'https://t.me/MYTV_1BOT' })">The Princess Switch: Switched Again (2019)</p>
+
+</div>
+
+  <div id="overlay">           
+          
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/10.jpg" alt="Image" onclick="showOverlay('images/10.jpg', { title: 'Click to download and submit the code to download the movie. code /10', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Pain & Gain</p>
+
+</div>
+
+
+ <div id="overlay">         
+          
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 205px; width: 140px;" src="images/11.jpg" alt="Image" onclick="showOverlay('images/11.jpg', { title: 'Click to download and submit the code to download the movie. code /11', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">The Professor (2018)</p>
+
+</div>
+
+  <div id="overlay">        
+           
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/12.jpg" alt="Image" onclick="showOverlay('images/12.jpg', { title: 'Click to download and submit the code to download the movie. code /12', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">The Machine (2023)</p>
+
+    </div>      
+            
+  <div id="overlay">         
+            
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/13.jpg" alt="Image" onclick="showOverlay('images/13.jpg', { title: 'Click to download and submit the code to download the movie. code /13', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Restart the Earth (2021)</p>
+
+   </div>
+
+ <div id="overlay">             
+      
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/14.jpg" alt="Image" onclick="showOverlay('images/14.jpg', { title: 'Click to download and submit the code to download the movie. code /14', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Mission: Impossible - Fallout (2018)</p>
+
+</div>
+          
+    <div id="overlay">         
+           
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/15.jpg" alt="Image" onclick="showOverlay('images/15.jpg', { title: 'Click to download and submit the code to download the movie. code /15', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">10 Cloverfield Lane (2016))</p>
+
+</div>
+
+          
+ <div id="overlay">            
+           
+           
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/16.jpg" alt="Image" onclick="showOverlay('images/16.jpg', { title: 'Click to download and submit the code to download the movie. code /16', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Day of the Dead (2008)</p>
+
+</div>
+          
+            
+<div id="overlay">         
+         
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/17.jpg" alt="Image" onclick="showOverlay('images/17.jpg', { title: 'Click to download and submit the code to download the movie. code /17', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Warhorse One (2023)</p>
+
+  </div>
+
+ <div id="overlay">              
+           
+         
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/18.jpg" alt="Image" onclick="showOverlay('images/18.jpg', { title: 'Click to download and submit the code to download the movie. code /18', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">War of the Worlds: The Attack (2023)</p>
+
+</div>
+          
+<div id="overlay">          
+            
+           
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/19.jpg" alt="Image" onclick="showOverlay('images/19.jpg', { title: 'Click to download and submit the code to download the movie. code /19', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Alive (2020)</p>
+
+</div>
+          
+<div id="overlay">              
+          
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/20.jpg" alt="Image" onclick="showOverlay('images/20.jpg', { title: 'Click to download and submit the code to download the movie. code /20', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Free Guy (2021)</p>
+
+</div>  
+          
+<div id="overlay">          
+           
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/21.jpg" alt="Image" onclick="showOverlay('images/21.jpg', { title: 'Click to download and submit the code to download the movie. code /21', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Sing (2016)</p>
+
+</div>
+
+<div id="overlay">       
+           
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/22.jpg" alt="Image" onclick="showOverlay('images/22.jpg', { title: 'Click to download and submit the code to download the movie. code /22', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Transformers: Rise of the Beasts (2023)</p>
+
+</div>            
+
+<div id="overlay">
+          
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/23.jpg" alt="Image" onclick="showOverlay('images/23.jpg', { title: 'Click to download and submit the code to download the movie. code /23', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">The Matrix Resurrections (2021)</p>
+
+</div>            
+
+<div id="overlay">         
+           
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/24.jpg" alt="Image" onclick="showOverlay('images/24.jpg', { title: 'Click to download and submit the code to download the movie. code /24', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Mad Max: Fury Road (2015)</p>
+
+</div>
+
+<div id="overlay">
+          
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/25.jpg" alt="Image" onclick="showOverlay('images/25.jpg', { title: 'Click to download and submit the code to download the movie. code /25', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Influencer (2023)</p>
+
+</div>
+
+  <div id="overlay">         
+        
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/26.jpg" alt="Image" onclick="showOverlay('images/26.jpg', { title: 'Click to download and submit the code to download the movie. code /26', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">The Blind Side (2009)</p>
+
+</div>
+
+ <div id="overlay">          
+          
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/27.jpg" alt="Image" onclick="showOverlay('images/27.jpg', { title: 'Click to download and submit the code to download the movie. code /27', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">The Conjuring 2 (2016)</p>
+</div>
+
+
+<div id="overlay">          
+            
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/28.jpg" alt="Image" onclick="showOverlay('images/28.jpg', { title: 'Click to download and submit the code to download the movie. code /28', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">The Bone Snatcher (2003)</p>
+</div>
+
+<div id="overlay">
+            
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/29.jpg" alt="Image" onclick="showOverlay('images/29.jpg', { title: 'Click to download and submit the code to download the movie. code /29', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Club Dread (2004)</p>
+
+</div>
+
+         <div id="overlay">
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/30.jpg" alt="Image" onclick="showOverlay('images/30.jpg', { title: 'Click to download and submit the code to download the movie. code /30', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">To End All War: Oppenheimer & the Atomic Bomb (2023)</p>
+      <div id="overlay">
+         </div>
+
+        </div>
+         </div>
+
+
+
+   <div class="image-slider">
+        <div class="slider-container">
+<div id="overlay">   
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/31.jpg" alt="Image" onclick="showOverlay('images/31.jpg', { title: 'Click to download and submit the code to download the movie. code /31', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Miss Americana (2020)</p>
+</div>  
+          
+<div id="overlay">       
+           
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/32.jpg" alt="Image" onclick="showOverlay('images/32.jpg', { title: 'Click to download and submit the code to download the movie. code /32', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Cyber Hell: Exposing an Internet Horror (2022)</p>
+
+</div>
+
+<div id="overlay">
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/33.jpg" alt="Image" onclick="showOverlay('images/33.jpg', { title: 'Click to download and submit the code to download the movie. code /33', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Won't You Be My Neighbor? (2018)</p>
+
+</div>
+            
+<div id="overlay">    
+
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/34.jpg" alt="Image" onclick="showOverlay('images/34.jpg', { title: 'Click to download and submit the code to download the movie. code /34', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Inside Job (2010)</p>
+</div>          
+           
+<div id="overlay">     
+
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/35.jpg" alt="Image" onclick="showOverlay('images/35.jpg', { title: 'Click to download and submit the code to download the movie. code /35', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Extraction 2 (2023)</p>
+</div>
+             
+<div id="overlay">
+           
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/36.jpg" alt="Image" onclick="showOverlay('images/36.jpg', { title: 'Click to download and submit the code to download the movie. code /36', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">The Mother (2023)</p>
+
+</div>
+              
+           
+<div id="overlay">
+
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/37.jpg" alt="Image" onclick="showOverlay('images/37.jpg', { title: 'Click to download and submit the code to download the movie. code /37', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">The Blackening (2023)</p>
+
+</div>             
+       
+<div id="overlay">         
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/38.jpg" alt="Image" onclick="showOverlay('images/38.jpg', { title: 'Click to download and submit the code to download the movie. code /38', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Johnny & Clyde (2023)</p>
+</div>
+          
+           
+          
+<div id="overlay">            
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/39.jpg" alt="Image" onclick="showOverlay('images/39.jpg', { title: 'Click to download and submit the code to download the movie. code /39', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">The Secret Kingdom (2023)</p>
+
+ </div>         
+             
+           
+<div id="overlay">         
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/40.jpg" alt="Image" onclick="showOverlay('images/40.jpg', { title: 'Click to download and submit the code to download the movie. code /40', year: 'download'  ,  downloadLink: 'https://t.me/MYTV_1BOT' })">The Flash (2023)</p>
+
+ </div>         
+            
+          
+ <div id="overlay">         
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download'  ,  downloadLink: 'https://t.me/MYTV_1BOT' })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+  </div>        
+             
+           
+ <div id="overlay">          
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+ </div>         
+              
+           
+  <div id="overlay">         
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+</div>          
+             
+           
+ <div id="overlay">          
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+</div>
+          
+              
+<div id="overlay">          
+           
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download'  ,  downloadLink: 'https://t.me/MYTV_1BOT' })">Guardians of the Galaxy Vol. 3 (2023)</p>
+</div>
+          
+  <div id="overlay">        
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+ </div>         
+               
+           
+   <div id="overlay">         
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+     </div>     
+             
+      <div id="overlay">    
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+      </div>    
+           
+          
+   <div id="overlay">       
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+  </div>        
+              
+    <div id="overlay">      
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+</div>
+          
+
+        </div>
+    </div>
+        <u style="color:#0C16F5"><h2 style="color:white;">tv series</h2></u>
+
+<div class="image-slider">
+        <div class="slider-container">
+            
+  <div id="overlay">        
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download'  ,  downloadLink: 'https://t.me/MYTV_1BOT' })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+    </div>      
+              
+    <div id="overlay">      
+           
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+     </div>     
+             
+           
+    <div id="overlay">       
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+</div>
+          
+              
+  <div id="overlay">        
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+</div>
+          
+              
+           
+ <div id="overlay">         
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+  </div>        
+             
+     <div id="overlay">     
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+       </div>   
+              
+          
+         <div id="overlay"> 
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+</div>
+             
+          
+<div id="overlay">          
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+   </div>       
+              
+           
+     <div id="overlay">     
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+      </div>    
+             
+          
+        <div id="overlay">   
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+         </div> 
+              
+          
+         <div id="overlay">
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+         </div> 
+             
+           
+      <div id="overlay">
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+</div>
+              
+           
+          <div id="overlay">
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+          </div>
+              
+           
+         <div id="overlay">   
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+         </div> 
+              
+           
+          <div id="overlay">  
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+          </div>
+              
+          
+         <div id="overlay">  
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+</div>
+          
+               
+        <div id="overlay">   
+           
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+</div>
+          
+             
+        <div id="overlay">   
+           
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+          
+         </div>   
+           
+        <div id="overlay">  
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+</div>
+          
+          
+             
+      <div id="overlay">    
+          
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+</div>
+
+        </div>
+    </div>
+    <h2 style="color:white;">multifilmlar</h2>
+
+
+   <div class="image-slider">
+        <div class="slider-container">
+            
+          
+          <div id="overlay"> 
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+</div>
+          
+             
+        <div id="overlay">  
+           
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+</div>
+          
+          
+           
+     <div id="overlay">     
+            
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+  </div>
+          
+              
+          
+        <div id="overlay">   
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+</div>
+          
+              
+          
+   <div id="overlay">        
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+        </div> 
+            
+           <div id="overlay">
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+</div>
+          
+          
+              
+        
+          <div id="overlay">
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+          </div>
+          
+             
+          
+           <div id="overlay"> 
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+          </div>
+             
+           
+          <div id="overlay">
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+          </div>
+            
+          
+          <div id="overlay"> 
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+          </div>
+          
+            
+           <div id="overlay">
+          
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+          </div>
+             
+          
+          <div id="overlay">
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+          </div>
+          
+           
+          <div id="overlay">
+          
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+          </div>
+          
+          <div id="overlay">
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+          </div>
+          
+             <div id="overlay">
+           
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+</div>
+          
+          
+             
+          <div id="overlay"> 
+           
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+          </div>
+          
+             
+          <div id="overlay">
+            
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+          </div>
+          
+          <div id="overlay">
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+          </div>
+          
+            
+         <div id="overlay">
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+          </div>
+             
+          <div id="overlay">
+            <p style="color:white;">
+            <img style="border-radius: 13px;padding: 6px; height: 213px; width: 141px;" src="images/1.jpg" alt="Image" onclick="showOverlay('images/1.jpg', { title: 'Click to download and submit the code to download the movie. code /1', year: 'download' ,  downloadLink: 'https://t.me/MYTV_1BOT'  })">Guardians of the Galaxy Vol. 3 (2023)</p>
+
+          </div>
+          
+
+        </div>
+    </div>
+<br>
+<br>
+<br>
+<br>
+<br>
+</body>
+</html>

@@ -1,0 +1,58 @@
+ body{
+ background-color: black; 
+}
+
+ .tab-menu {
+  display: flex;
+  justify-content: space-between;
+     border: 2px solid rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.1);
+            padding: 14px;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  border-radius: 14px;
+}
+
+.tab-button {
+  flex: 1;
+  padding: 10px 20px;
+background-color:#120E0D;
+  cursor: pointer;
+  border-radius: 14px;
+}
+
+.tab-button.active {
+   background-color:#120E0D;
+}
+
+
+.tab-content {
+  display: none;
+  padding: 10px;
+  margin-bottom: 50px;
+}
+
+<!-- film rasm dizayni -- >
+.image-slider {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+.slider-container {
+    display: flex;
+    overflow-x: scroll;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+img {
+    width: 100%;
+    height: auto;
+    scroll-snap-align: start;
+}
+
+<!-- navbar--\
