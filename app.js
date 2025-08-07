@@ -74,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Super admin always gets access
       if (user.email === SUPER_ADMIN_EMAIL) {
+        currentUser.isSuperAdmin = true;
         document.getElementById('userEmail').textContent = user.email;
         document.querySelector('.logout-btn').style.display = 'inline-flex';
         authSection.style.display = 'none';
@@ -417,7 +418,7 @@ window.addStudent = async function() {
       phone: phone || '',
       email: email || '',
       createdAt: new Date().toISOString(),
-      centerId: currentUser.uid
+      centerId: currentUser.centerId
     });
     
     showToast("O'quvchi qo'shildi!", 'success');
@@ -489,7 +490,7 @@ window.updateStudent = async function() {
       phone: phone || '',
       email: email || '',
       createdAt: new Date().toISOString(),
-      centerId: currentUser.uid
+      centerId: currentUser.centerId
     });
     
     showToast("O'quvchi ma'lumotlari yangilandi!", 'success');
@@ -619,14 +620,17 @@ function loadAttendanceData() {
     showToast('Iltimos, avval tizimga kiring', 'error');
     return;
   }
+  if (currentUser.isSuperAdmin) {
+    document.getElementById('attendanceList').innerHTML = '<div class="empty-state"><h2>Admin Panel</h2><p>Markazlarni boshqarish uchun pastdagi Admin menyusidan foydalaning.</p></div>';
+    return;
+  }
 
-  // UI-level permission check
   const canMark = currentUser.permissions?.canMarkAttendance;
   const markAllButton = document.querySelector('#attendancePage .btn[onclick="markAllPresent()"]');
   if (markAllButton) {
     markAllButton.style.display = canMark ? 'inline-flex' : 'none';
   }
-  
+
   const dateInput = document.getElementById('attendanceDate');
   const attendanceList = document.getElementById('attendanceList');
   
@@ -786,6 +790,13 @@ async function updateAttendance(studentId, date, isPresent) {
 // Data loading functions
 function loadDashboardData() {
   if (!currentUser) return;
+  if (currentUser.isSuperAdmin) {
+    // Super admin doesn't have a personal dashboard
+    document.getElementById('studentsCount').textContent = '-';
+    document.getElementById('attendanceCount').textContent = '-';
+    document.getElementById('totalPayments').textContent = '-';
+    return;
+  }
   
   const studentsQuery = query(
     ref(database, 'students'),
@@ -834,6 +845,10 @@ function loadStudents() {
   if (!currentUser) {
     console.error('No current user');
     showToast('Iltimos, avval tizimga kiring', 'error');
+    return;
+  }
+  if (currentUser.isSuperAdmin) {
+    document.getElementById('studentsList').innerHTML = '<div class="empty-state"><h2>Admin Panel</h2><p>Markazlarni boshqarish uchun pastdagi Admin menyusidan foydalaning.</p></div>';
     return;
   }
 
@@ -1097,6 +1112,10 @@ window.addPayment = async function(event) {
 window.loadPayments = async function() {
   if (!currentUser) {
     showToast('Iltimos, avval tizimga kiring', 'error');
+    return;
+  }
+  if (currentUser.isSuperAdmin) {
+    document.getElementById('paymentsList').innerHTML = '<div class="empty-state"><h2>Admin Panel</h2><p>Markazlarni boshqarish uchun pastdagi Admin menyusidan foydalaning.</p></div>';
     return;
   }
 
