@@ -163,6 +163,36 @@
         </div>
         <div id="paymentsList"></div>
       </section>
+
+      <section id="adminPage" class="page" style="display: none;">
+        <div class="page-header">
+          <h2>Admin Boshqaruvi</h2>
+        </div>
+        <div id="centersList"></div>
+      </section>
+
+      <section id="staffPage" class="page" style="display: none;">
+        <div class="page-header">
+          <h2>Xodimlarni Boshqarish</h2>
+          <button class="btn primary-btn" onclick="showInviteStaffForm()">
+              <i class="fas fa-plus"></i> Xodim taklif qilish
+          </button>
+        </div>
+        <div id="inviteStaffForm" class="form-container" style="display: none;">
+          <h3>Yangi xodim taklif qilish</h3>
+          <div class="input-group">
+              <i class="fas fa-envelope"></i>
+              <input type="email" id="staffEmail" placeholder="Xodimning elektron pochtasi">
+          </div>
+          <div class="form-actions">
+              <button class="btn secondary-btn" onclick="showInviteStaffForm()">Bekor qilish</button>
+              <button class="btn primary-btn" onclick="inviteStaff()">
+                  <i class="fas fa-paper-plane"></i> Taklif yuborish
+              </button>
+          </div>
+        </div>
+        <div id="staffList"></div>
+      </section>
     </main>
 
     <nav class="bottom-nav">
@@ -181,6 +211,14 @@
       <div class="nav-item" onclick="showPage('paymentsPage')">
         <i class="fas fa-money-bill-wave"></i>
         <span>To'lovlar</span>
+      </div>
+      <div id="staffNav" class="nav-item" onclick="showPage('staffPage')" style="display: none;">
+        <i class="fas fa-users-cog"></i>
+        <span>Xodimlar</span>
+      </div>
+      <div id="adminNav" class="nav-item" onclick="showPage('adminPage')" style="display: none;">
+        <i class="fas fa-user-shield"></i>
+        <span>Admin</span>
       </div>
     </nav>
 
@@ -242,6 +280,15 @@
             <i class="fas fa-trash"></i> O'chirish
           </button>
         </div>
+      </div>
+    </div>
+
+    <div id="suspensionModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Hisob to'xtatilgan</h3>
+        </div>
+        <p>Sizning o'quv markazingiz faoliyati administrator tomonidan to'xtatilgan. Iltimos, administrator bilan bog'laning.</p>
       </div>
     </div>
   </div>

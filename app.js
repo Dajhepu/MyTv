@@ -39,6 +39,7 @@ const database = getDatabase(app);
 const auth = getAuth(app);
 
 // Global variables
+const SUPER_ADMIN_EMAIL = "rahimboyislombek@gmail.com";
 let currentUser = null;
 let isInitialized = false;
 let payments = [];
@@ -65,20 +66,81 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   // Check authentication state
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     const bottomNav = document.querySelector('.bottom-nav');
     
     if (user) {
       currentUser = user;
-      document.getElementById('userEmail').textContent = user.email;
-      document.querySelector('.logout-btn').style.display = 'inline-flex';
-      
-      authSection.style.display = 'none';
-      if (mainApp) mainApp.style.display = 'block';
-      if (bottomNav) bottomNav.style.display = 'flex';
-      
-      showPage('dashboardSection');
-      loadDashboardData();
+
+      // Super admin always gets access
+      if (user.email === SUPER_ADMIN_EMAIL) {
+        document.getElementById('userEmail').textContent = user.email;
+        document.querySelector('.logout-btn').style.display = 'inline-flex';
+        authSection.style.display = 'none';
+        if (mainApp) mainApp.style.display = 'block';
+        if (bottomNav) bottomNav.style.display = 'flex';
+        document.getElementById('adminNav').style.display = 'flex';
+        showPage('dashboardSection');
+        loadDashboardData();
+        return;
+      }
+
+      // Check if user is a staff member or a center admin
+      const staffMappingRef = ref(database, `staff_to_center_mapping/${user.uid}`);
+      const staffMappingSnapshot = await get(staffMappingRef);
+
+      let centerId;
+      let isStaff = false;
+
+      if (staffMappingSnapshot.exists()) {
+        // User is a staff member
+        isStaff = true;
+        centerId = staffMappingSnapshot.val();
+      } else {
+        // User is a center admin
+        isStaff = false;
+        centerId = user.uid;
+      }
+
+      // Check if the center is active
+      const centerRef = ref(database, `centers/${centerId}`);
+      const centerSnapshot = await get(centerRef);
+
+      if (centerSnapshot.exists() && centerSnapshot.val().isActive) {
+        currentUser.centerId = centerId; // Store centerId for later use
+
+        if (isStaff) {
+          currentUser.permissions = centerSnapshot.val().staff[user.uid]?.permissions || {};
+          document.getElementById('staffNav').style.display = 'none';
+
+          // Hide nav items based on permissions
+          document.querySelector('.nav-item[onclick="showPage(\'studentsPage\')"]').style.display = currentUser.permissions.canManageStudents ? 'flex' : 'none';
+          document.querySelector('.nav-item[onclick="showPage(\'attendancePage\')"]').style.display = currentUser.permissions.canMarkAttendance ? 'flex' : 'none';
+          document.querySelector('.nav-item[onclick="showPage(\'paymentsPage\')"]').style.display = currentUser.permissions.canViewPayments ? 'flex' : 'none';
+        } else {
+          // Center admin has all permissions
+          currentUser.permissions = { canManageStudents: true, canViewPayments: true, canMarkAttendance: true };
+          document.getElementById('staffNav').style.display = 'flex';
+        }
+
+        document.getElementById('userEmail').textContent = user.email;
+        document.querySelector('.logout-btn').style.display = 'inline-flex';
+        authSection.style.display = 'none';
+        if (mainApp) mainApp.style.display = 'block';
+        if (bottomNav) bottomNav.style.display = 'flex';
+        document.getElementById('adminNav').style.display = 'none';
+        showPage('dashboardSection');
+        loadDashboardData();
+      } else {
+        // Center is inactive or doesn't exist
+        showToast('Hisobingiz faol emas. Administrator bilan bog\'laning.', 'error');
+        const suspensionModal = document.getElementById('suspensionModal');
+        if (suspensionModal) {
+          suspensionModal.style.display = 'flex';
+          setTimeout(() => suspensionModal.classList.add('show'), 10);
+        }
+        await signOut(auth); // Sign out the user
+      }
     } else {
       currentUser = null;
       document.querySelector('.logout-btn').style.display = 'none';
@@ -119,11 +181,19 @@ function showPage(pageId) {
         'dashboardSection': 0,
         'studentsPage': 1,
         'attendancePage': 2,
-        'paymentsPage': 3
+        'paymentsPage': 3,
+        'staffPage': 4,
+        'adminPage': 5
       };
       
       if (navItems[pageId] !== undefined) {
-        document.querySelectorAll('.nav-item')[navItems[pageId]].classList.add('active');
+        // Adjust index for admin nav item if it's not visible
+        const adminNavIndex = (document.getElementById('adminNav').style.display === 'none') ? -1 : 5;
+        if (navItems[pageId] === adminNavIndex) {
+          document.querySelectorAll('.nav-item')[adminNavIndex].classList.add('active');
+        } else {
+          document.querySelectorAll('.nav-item')[navItems[pageId]].classList.add('active');
+        }
       }
     }
     
@@ -135,6 +205,10 @@ function showPage(pageId) {
       loadAttendanceData();
     } else if (pageId === 'paymentsPage') {
       loadPayments();
+    } else if (pageId === 'adminPage') {
+      loadAdminData();
+    } else if (pageId === 'staffPage') {
+      loadStaffData();
     }
   } else {
     console.error(`Page with ID ${pageId} not found!`);
@@ -209,30 +283,75 @@ window.registerUser = async function() {
   const email = document.getElementById('registerEmail').value.trim();
   const password = document.getElementById('registerPassword').value;
   const confirmPassword = document.getElementById('confirmPassword').value;
-  
+
   if (!email || !password || !confirmPassword) {
     showToast("Iltimos, barcha maydonlarni to'ldiring!", 'error');
     return;
   }
-  
+
   if (password.length < 6) {
     showToast('Parol kamida 6 belgidan iborat bo\'lishi kerak', 'error');
     return;
   }
-  
+
   if (password !== confirmPassword) {
     showToast('Parollar mos kelmadi!', 'error');
     return;
   }
-  
+
+  const registerButton = document.querySelector('#registerSection button');
   try {
-    const registerButton = document.querySelector('#registerSection button');
     const originalText = registerButton.innerHTML;
     registerButton.disabled = true;
     registerButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Ro\'yxatdan o\'tilmoqda...';
-    
-    await createUserWithEmailAndPassword(auth, email, password);
-    showToast("Muvaffaqiyatli ro'yxatdan o'tildi!", 'success');
+
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // Check for a pending invitation
+    const invitationsQuery = query(ref(database, 'invitations'), orderByChild('email'), equalTo(user.email));
+    const snapshot = await get(invitationsQuery);
+
+    if (snapshot.exists()) {
+      // This user is a staff member being registered
+      let centerId;
+      let invitationId;
+      snapshot.forEach(child => {
+        invitationId = child.key;
+        centerId = child.val().centerId;
+      });
+
+      // Add user to staff list in the center
+      const staffRef = ref(database, `centers/${centerId}/staff/${user.uid}`);
+      await set(staffRef, {
+        email: user.email,
+        permissions: {
+          canManageStudents: false,
+          canViewPayments: false,
+          canMarkAttendance: false
+        }
+      });
+
+      // Add to staff-to-center mapping
+      const mappingRef = ref(database, `staff_to_center_mapping/${user.uid}`);
+      await set(mappingRef, centerId);
+
+      // Remove the invitation
+      const invitationRef = ref(database, `invitations/${invitationId}`);
+      await remove(invitationRef);
+
+      showToast("Xodim sifatida muvaffaqiyatli ro'yxatdan o'tdingiz!", 'success');
+    } else {
+      // This is a new center admin registering
+      const centerRef = ref(database, `centers/${user.uid}`);
+      await set(centerRef, {
+        ownerEmail: user.email,
+        createdAt: new Date().toISOString(),
+        isActive: true,
+        staff: {}
+      });
+      showToast("Muvaffaqiyatli ro'yxatdan o'tildi!", 'success');
+    }
     showLoginForm();
   } catch (error) {
     console.error('Registration error:', error);
@@ -272,6 +391,10 @@ window.addStudent = async function() {
     showToast('Iltimos, avval tizimga kiring', 'error');
     return;
   }
+  if (!currentUser.permissions?.canManageStudents) {
+    showToast('Sizda o\'quvchi qo\'shish uchun ruxsat yo\'q', 'error');
+    return;
+  }
   
   const name = document.getElementById('studentName').value.trim();
   const phone = document.getElementById('studentPhone').value.trim();
@@ -294,7 +417,7 @@ window.addStudent = async function() {
       phone: phone || '',
       email: email || '',
       createdAt: new Date().toISOString(),
-      createdBy: currentUser.uid
+      centerId: currentUser.uid
     });
     
     showToast("O'quvchi qo'shildi!", 'success');
@@ -339,6 +462,10 @@ window.updateStudent = async function() {
     showToast('Iltimos, avval tizimga kiring', 'error');
     return;
   }
+  if (!currentUser.permissions?.canManageStudents) {
+    showToast('Sizda o\'quvchi ma\'lumotlarini tahrirlash uchun ruxsat yo\'q', 'error');
+    return;
+  }
   
   const studentId = document.getElementById('editStudentId').value;
   const name = document.getElementById('editStudentName').value.trim();
@@ -362,7 +489,7 @@ window.updateStudent = async function() {
       phone: phone || '',
       email: email || '',
       createdAt: new Date().toISOString(),
-      createdBy: currentUser.uid
+      centerId: currentUser.uid
     });
     
     showToast("O'quvchi ma'lumotlari yangilandi!", 'success');
@@ -378,6 +505,10 @@ window.updateStudent = async function() {
 };
 
 window.deleteStudent = async function(studentId) {
+  if (!currentUser.permissions?.canManageStudents) {
+    showToast('Sizda o\'quvchini o\'chirish uchun ruxsat yo\'q', 'error');
+    return;
+  }
   if (!confirm("Haqiqatan ham ushbu o'quvchini o'chirmoqchimisiz?")) return;
   
   try {
@@ -434,6 +565,10 @@ window.markAllPresent = async function() {
     showToast('Iltimos, avval tizimga kiring', 'error');
     return;
   }
+  if (!currentUser.permissions?.canMarkAttendance) {
+    showToast('Sizda davomatni belgilash uchun ruxsat yo\'q', 'error');
+    return;
+  }
   
   const date = document.getElementById('attendanceDate').value;
   if (!date) {
@@ -444,8 +579,8 @@ window.markAllPresent = async function() {
   try {
     const studentsQuery = query(
       ref(database, 'students'),
-      orderByChild('createdBy'),
-      equalTo(currentUser.uid)
+      orderByChild('centerId'),
+      equalTo(currentUser.centerId)
     );
     
     const snapshot = await get(studentsQuery);
@@ -484,6 +619,13 @@ function loadAttendanceData() {
     showToast('Iltimos, avval tizimga kiring', 'error');
     return;
   }
+
+  // UI-level permission check
+  const canMark = currentUser.permissions?.canMarkAttendance;
+  const markAllButton = document.querySelector('#attendancePage .btn[onclick="markAllPresent()"]');
+  if (markAllButton) {
+    markAllButton.style.display = canMark ? 'inline-flex' : 'none';
+  }
   
   const dateInput = document.getElementById('attendanceDate');
   const attendanceList = document.getElementById('attendanceList');
@@ -499,8 +641,8 @@ function loadAttendanceData() {
   
   const studentsQuery = query(
     ref(database, 'students'),
-    orderByChild('createdBy'),
-    equalTo(currentUser.uid)
+    orderByChild('centerId'),
+    equalTo(currentUser.centerId)
   );
   
   onValue(studentsQuery, (snapshot) => {
@@ -538,7 +680,7 @@ function loadAttendanceData() {
           </div>
           <div class="attendance-status">
             <label class="switch">
-              <input type="checkbox" id="attendance_${studentId}" data-student-id="${studentId}">
+              <input type="checkbox" id="attendance_${studentId}" data-student-id="${studentId}" ${!canMark ? 'disabled' : ''}>
               <span class="slider round"></span>
             </label>
           </div>
@@ -605,6 +747,13 @@ async function updateAttendance(studentId, date, isPresent) {
     showToast('Noto\'g\'ri ma\'lumotlar', 'error');
     return;
   }
+  if (!currentUser.permissions?.canMarkAttendance) {
+    showToast('Sizda davomatni belgilash uchun ruxsat yo\'q', 'error');
+    // Revert the checkbox state visually
+    const checkbox = document.getElementById(`attendance_${studentId}`);
+    if (checkbox) checkbox.checked = !isPresent;
+    return;
+  }
   
   const attendanceRef = ref(database, `students/${studentId}/attendance/${date}`);
   const checkbox = document.getElementById(`attendance_${studentId}`);
@@ -640,8 +789,8 @@ function loadDashboardData() {
   
   const studentsQuery = query(
     ref(database, 'students'),
-    orderByChild('createdBy'),
-    equalTo(currentUser.uid)
+    orderByChild('centerId'),
+    equalTo(currentUser.centerId)
   );
   
   onValue(studentsQuery, (snapshot) => {
@@ -687,6 +836,13 @@ function loadStudents() {
     showToast('Iltimos, avval tizimga kiring', 'error');
     return;
   }
+
+  // UI-level permission check
+  const canManage = currentUser.permissions?.canManageStudents;
+  const addStudentButton = document.querySelector('#studentsPage .primary-btn[onclick="showAddStudentForm()"]');
+  if (addStudentButton) {
+    addStudentButton.style.display = canManage ? 'inline-flex' : 'none';
+  }
   
   const studentsList = document.getElementById('studentsList');
   if (!studentsList) {
@@ -699,8 +855,8 @@ function loadStudents() {
   
   const studentsQuery = query(
     ref(database, 'students'),
-    orderByChild('createdBy'),
-    equalTo(currentUser.uid)
+    orderByChild('centerId'),
+    equalTo(currentUser.centerId)
   );
   
   onValue(studentsQuery, (snapshot) => {
@@ -725,12 +881,14 @@ function loadStudents() {
             </p>
           </div>
           <div class="list-item-actions">
-            <button class="icon-btn" onclick="editStudent('${studentId}')">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="icon-btn danger" onclick="deleteStudent('${studentId}')">
-              <i class="fas fa-trash"></i>
-            </button>
+            ${canManage ? `
+              <button class="icon-btn" onclick="editStudent('${studentId}')">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="icon-btn danger" onclick="deleteStudent('${studentId}')">
+                <i class="fas fa-trash"></i>
+              </button>
+            ` : ''}
           </div>
         `;
         studentsList.appendChild(studentElement);
@@ -826,8 +984,8 @@ async function loadStudentsForPaymentForm() {
   try {
     const studentsQuery = query(
       ref(database, 'students'),
-      orderByChild('createdBy'),
-      equalTo(currentUser.uid)
+      orderByChild('centerId'),
+      equalTo(currentUser.centerId)
     );
     
     const snapshot = await get(studentsQuery);
@@ -889,6 +1047,10 @@ window.addPayment = async function(event) {
     showToast('Iltimos, avval tizimga kiring', 'error');
     return;
   }
+  if (!currentUser.permissions?.canViewPayments) {
+    showToast('Sizda to\'lov qo\'shish uchun ruxsat yo\'q', 'error');
+    return;
+  }
   
   const studentId = document.getElementById('paymentStudent').value;
   const amount = parseInt(document.getElementById('paymentAmount').value);
@@ -937,6 +1099,13 @@ window.loadPayments = async function() {
     showToast('Iltimos, avval tizimga kiring', 'error');
     return;
   }
+
+  // UI-level permission check
+  const canView = currentUser.permissions?.canViewPayments;
+  const addPaymentButton = document.querySelector('#paymentsPage .btn[onclick="showAddPaymentModal()"]');
+  if (addPaymentButton) {
+    addPaymentButton.style.display = canView ? 'inline-flex' : 'none';
+  }
   
   const paymentsList = document.getElementById('paymentsList');
   const monthFilter = document.getElementById('paymentMonth')?.value;
@@ -951,8 +1120,8 @@ window.loadPayments = async function() {
   try {
     const studentsQuery = query(
       ref(database, 'students'),
-      orderByChild('createdBy'),
-      equalTo(currentUser.uid)
+      orderByChild('centerId'),
+      equalTo(currentUser.centerId)
     );
     
     const studentsSnapshot = await get(studentsQuery);
@@ -1065,9 +1234,11 @@ function updatePaymentsUI(students) {
           <div class="payment-amount">${formatCurrency(payment.amount)}</div>
         </div>
         <div class="payment-actions">
-          <button class="payment-action-btn delete" onclick="confirmDeletePayment('${payment.studentId}', '${payment.id}')" title="O'chirish">
-            <i class="fas fa-trash"></i>
-          </button>
+          ${currentUser.permissions?.canViewPayments ? `
+            <button class="payment-action-btn delete" onclick="confirmDeletePayment('${payment.studentId}', '${payment.id}')" title="O'chirish">
+              <i class="fas fa-trash"></i>
+            </button>
+          ` : ''}
         </div>
       </div>
     `;
@@ -1140,6 +1311,10 @@ async function deletePayment(studentId, paymentId) {
     showToast('Iltimos, avval tizimga kiring', 'error');
     return;
   }
+  if (!currentUser.permissions?.canViewPayments) {
+    showToast('Sizda to\'lovni o\'chirish uchun ruxsat yo\'q', 'error');
+    return;
+  }
   
   try {
     const paymentRef = ref(database, `students/${studentId}/payments/${paymentId}`);
@@ -1152,6 +1327,173 @@ async function deletePayment(studentId, paymentId) {
     showToast("To'lovni o'chirishda xato: " + error.message, 'error');
   }
 }
+
+// Admin functions
+function loadAdminData() {
+  if (!currentUser || currentUser.email !== SUPER_ADMIN_EMAIL) {
+    showToast('Sizda bu sahifaga kirish huquqi yo\'q', 'error');
+    showPage('dashboardSection');
+    return;
+  }
+
+  const centersList = document.getElementById('centersList');
+  centersList.innerHTML = '<div class="loading">Markazlar yuklanmoqda...</div>';
+
+  const centersRef = ref(database, 'centers');
+  onValue(centersRef, (snapshot) => {
+    centersList.innerHTML = '';
+    if (snapshot.exists()) {
+      snapshot.forEach((childSnapshot) => {
+        const center = childSnapshot.val();
+        const centerId = childSnapshot.key;
+        const centerElement = document.createElement('div');
+        centerElement.className = 'list-item';
+        centerElement.innerHTML = `
+          <div class="list-item-info">
+            <h4>${center.ownerEmail}</h4>
+            <p>Status: ${center.isActive ? 'Aktiv' : 'Bloklangan'}</p>
+            <small>Ro'yxatdan o'tgan: ${new Date(center.createdAt).toLocaleDateString()}</small>
+          </div>
+          <div class="list-item-actions">
+            <label class="switch">
+              <input type="checkbox" onchange="toggleCenterStatus('${centerId}', this.checked)" ${center.isActive ? 'checked' : ''}>
+              <span class="slider round"></span>
+            </label>
+          </div>
+        `;
+        centersList.appendChild(centerElement);
+      });
+    } else {
+      centersList.innerHTML = '<div class="empty-state"><p>Markazlar topilmadi</p></div>';
+    }
+  }, (error) => {
+    console.error('Error loading centers:', error);
+    showToast('Markazlarni yuklashda xato: ' + error.message, 'error');
+    centersList.innerHTML = '<div class="error"><p>Markazlarni yuklashda xatolik yuz berdi</p></div>';
+  });
+}
+
+window.toggleCenterStatus = async function(centerId, isActive) {
+  if (!currentUser || currentUser.email !== SUPER_ADMIN_EMAIL) {
+    showToast('Bu amalni bajarish uchun sizda huquq yo\'q', 'error');
+    return;
+  }
+
+  const centerRef = ref(database, `centers/${centerId}`);
+  try {
+    await update(centerRef, { isActive: isActive });
+    showToast(`Markaz statusi ${isActive ? 'aktivlashtirildi' : 'bloklandi'}`, 'success');
+  } catch (error) {
+    console.error('Error updating center status:', error);
+    showToast('Markaz statusini yangilashda xato: ' + error.message, 'error');
+    // Revert the switch state on error
+    loadAdminData();
+  }
+}
+
+// Staff Management Functions
+window.showInviteStaffForm = function() {
+  const form = document.getElementById('inviteStaffForm');
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+};
+
+function loadStaffData() {
+  if (!currentUser) {
+    showToast('Iltimos, avval tizimga kiring', 'error');
+    return;
+  }
+
+  const staffList = document.getElementById('staffList');
+  staffList.innerHTML = '<div class="loading">Xodimlar yuklanmoqda...</div>';
+
+  const staffRef = ref(database, `centers/${currentUser.uid}/staff`);
+  onValue(staffRef, (snapshot) => {
+    staffList.innerHTML = '';
+    if (snapshot.exists()) {
+      snapshot.forEach((childSnapshot) => {
+        const staffMember = childSnapshot.val();
+        const staffId = childSnapshot.key;
+        const staffElement = document.createElement('div');
+        staffElement.className = 'list-item';
+        const permissions = staffMember.permissions || {};
+        staffElement.innerHTML = `
+          <div class="list-item-info">
+            <h4>${staffMember.email}</h4>
+          </div>
+          <div class="staff-permissions">
+            <label class="permission-toggle">
+              <input type="checkbox" onchange="updateStaffPermission('${staffId}', 'canManageStudents', this.checked)" ${permissions.canManageStudents ? 'checked' : ''}>
+              <span>O'quvchilar</span>
+            </label>
+            <label class="permission-toggle">
+              <input type="checkbox" onchange="updateStaffPermission('${staffId}', 'canViewPayments', this.checked)" ${permissions.canViewPayments ? 'checked' : ''}>
+              <span>To'lovlar</span>
+            </label>
+            <label class="permission-toggle">
+              <input type="checkbox" onchange="updateStaffPermission('${staffId}', 'canMarkAttendance', this.checked)" ${permissions.canMarkAttendance ? 'checked' : ''}>
+              <span>Davomat</span>
+            </label>
+          </div>
+        `;
+        staffList.appendChild(staffElement);
+      });
+    } else {
+      staffList.innerHTML = '<div class="empty-state"><p>Hali xodimlar qo\'shilmagan.</p></div>';
+    }
+  }, (error) => {
+    console.error('Error loading staff:', error);
+    staffList.innerHTML = '<div class="error"><p>Xodimlarni yuklashda xatolik yuz berdi.</p></div>';
+  });
+}
+
+window.updateStaffPermission = async function(staffId, permissionKey, value) {
+  if (!currentUser) {
+    showToast('Iltimos, avval tizimga kiring', 'error');
+    return;
+  }
+
+  const permissionRef = ref(database, `centers/${currentUser.uid}/staff/${staffId}/permissions/${permissionKey}`);
+  try {
+    await set(permissionRef, value);
+    showToast('Ruxsat muvaffaqiyatli yangilandi', 'success');
+  } catch (error) {
+    console.error('Error updating permission:', error);
+    showToast('Ruxsatni yangilashda xato: ' + error.message, 'error');
+    loadStaffData(); // Re-load to revert checkbox state
+  }
+}
+
+window.inviteStaff = async function() {
+  if (!currentUser) {
+    showToast('Iltimos, avval tizimga kiring', 'error');
+    return;
+  }
+
+  const email = document.getElementById('staffEmail').value.trim();
+  if (!email) {
+    showToast('Iltimos, xodimning elektron pochtasini kiriting', 'error');
+    return;
+  }
+
+  try {
+    const invitationsRef = ref(database, 'invitations');
+    const newInvitationRef = push(invitationsRef);
+    await set(newInvitationRef, {
+      centerId: currentUser.uid,
+      email: email,
+      status: 'pending',
+      invitedAt: new Date().toISOString()
+    });
+
+    showToast(`Taklifnoma ${email} manziliga yuborildi`, 'success');
+    document.getElementById('staffEmail').value = '';
+    showInviteStaffForm(); // Hide the form after sending
+  } catch (error) {
+    console.error('Error sending invitation:', error);
+    showToast('Taklifnoma yuborishda xato: ' + error.message, 'error');
+  }
+}
+
 
 // Report functions - PDF va Excel export uchun soddalashtirilgan
 window.exportAttendanceReport = async function(format) {
@@ -1169,8 +1511,8 @@ window.exportAttendanceReport = async function(format) {
   try {
     const studentsQuery = query(
       ref(database, 'students'),
-      orderByChild('createdBy'),
-      equalTo(currentUser.uid)
+      orderByChild('centerId'),
+      equalTo(currentUser.centerId)
     );
     
     const snapshot = await get(studentsQuery);
@@ -1304,8 +1646,8 @@ window.exportPaymentsReport = async function(format) {
   try {
     const studentsQuery = query(
       ref(database, 'students'),
-      orderByChild('createdBy'),
-      equalTo(currentUser.uid)
+      orderByChild('centerId'),
+      equalTo(currentUser.centerId)
     );
     
     const studentsSnapshot = await get(studentsQuery);
