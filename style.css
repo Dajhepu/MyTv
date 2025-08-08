@@ -399,9 +399,20 @@ main {
     background-color: #f8f9fe;
 }
 
-#adminUserManagementList .list-item span {
+#adminUserManagementList .list-item .user-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+#adminUserManagementList .list-item .user-email {
     font-weight: 500;
     color: var(--dark-color);
+}
+
+#adminUserManagementList .list-item .user-phone {
+    font-size: 0.85rem;
+    color: var(--gray-color);
 }
 
 #adminUserManagementList .list-item .btn {

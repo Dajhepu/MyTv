@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, set, push, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, set, push, onValue, get, update, query, orderByChild, equalTo, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -69,11 +69,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (uid === currentUser.uid) return;
                     const user = childSnapshot.val();
                     const email = user.profile?.email || 'Noma\'lum';
+                    const phone = user.profile?.phone || 'Raqam kiritilmagan';
                     const isDisabled = user.profile?.disabled || false;
                     const itemEl = document.createElement('div');
                     itemEl.className = 'list-item';
                     itemEl.innerHTML = `
-                        <span>${email}</span>
+                        <div class="user-details">
+                            <span class="user-email">${email}</span>
+                            <span class="user-phone">${phone}</span>
+                        </div>
                         <button class="btn ${isDisabled ? 'primary-btn' : 'danger-btn'}"
                                 data-uid="${uid}"
                                 data-disable="${!isDisabled}">
@@ -240,12 +244,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const deleteGroup = async (groupId) => {
         if (!viewingUid || !groupId) return;
+
+        // First, check if any students are part of this group.
+        const studentsQuery = query(
+            ref(db, `users/${viewingUid}/students`),
+            orderByChild('groupId'),
+            equalTo(groupId)
+        );
+        const snapshot = await get(studentsQuery);
+
+        if (snapshot.exists()) {
+            alert("Bu guruhda o'quvchilar mavjud. Guruhni o'chirishdan oldin ularni boshqa guruhga o'tkazing yoki o'chirib tashlang.");
+            return;
+        }
+
+        // If no students are found, proceed with deletion.
         if (confirm("Haqiqatan ham ushbu guruhni o'chirmoqchimisiz?")) {
             try {
                 await remove(ref(db, `users/${viewingUid}/groups/${groupId}`));
-                alert("Guruh o'chirildi.");
+                alert("Guruh muvaffaqiyatli o'chirildi.");
             } catch (error) {
-                alert(`Xatolik: ${error.message}`);
+                alert(`Guruhni o'chirishda xatolik: ${error.message}`);
+                console.error("Error deleting group: ", error);
             }
         }
     };
@@ -305,13 +325,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const deleteStudent = async (studentId) => {
         if (!viewingUid || !studentId) return;
-        if (confirm("Haqiqatan ham ushbu o'quvchini o'chirmoqchimisiz?")) {
-            try {
-                await remove(ref(db, `users/${viewingUid}/students/${studentId}`));
-                alert("O'quvchi o'chirildi.");
-            } catch (error) {
-                alert(`Xatolik: ${error.message}`);
+        const confirmation = confirm("Haqiqatan ham ushbu o'quvchini o'chirmoqchimisiz? Bu amal o'quvchining barcha to'lov va davomat ma'lumotlarini ham butunlay o'chirib yuboradi.");
+        if (!confirmation) return;
+
+        try {
+            const updates = {};
+            // Mark the student for deletion
+            updates[`/users/${viewingUid}/students/${studentId}`] = null;
+
+            // Find and mark associated payments for deletion
+            const paymentsQuery = query(
+                ref(db, `users/${viewingUid}/payments`),
+                orderByChild('studentId'),
+                equalTo(studentId)
+            );
+            const paymentsSnapshot = await get(paymentsQuery);
+            if (paymentsSnapshot.exists()) {
+                paymentsSnapshot.forEach(snap => {
+                    updates[`/users/${viewingUid}/payments/${snap.key}`] = null;
+                });
             }
+
+            // Find and mark associated attendance records for deletion
+            const attendanceRef = ref(db, `users/${viewingUid}/attendance`);
+            const attendanceSnapshot = await get(attendanceRef);
+            if (attendanceSnapshot.exists()) {
+                attendanceSnapshot.forEach(dateSnap => {
+                    if (dateSnap.hasChild(studentId)) {
+                        updates[`/users/${viewingUid}/attendance/${dateSnap.key}/${studentId}`] = null;
+                    }
+                });
+            }
+
+            // Perform the multi-path delete
+            await update(ref(db), updates);
+
+            alert("O'quvchi va unga tegishli barcha ma'lumotlar muvaffaqiyatli o'chirildi.");
+
+        } catch (error) {
+            alert(`O'quvchini o'chirishda xatolik: ${error.message}`);
+            console.error("Error deleting student and related data: ", error);
         }
     };
 
