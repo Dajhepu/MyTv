@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
         registerUser(document.getElementById('registerEmail').value, document.getElementById('registerPassword').value);
     });
 
-    window.logoutUser = () => signOut(auth);
+    document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
 
     document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -162,8 +162,6 @@ document.addEventListener('DOMContentLoaded', () => {
             viewingUid = user.uid;
             authSection.style.display = 'none';
             mainApp.style.display = 'block';
-
-            // Check for admin status
             const adminRef = ref(db, 'admins/' + user.uid);
             const snapshot = await get(adminRef);
             if (snapshot.exists()) {
@@ -174,7 +172,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 adminControls.style.display = 'none';
                 adminNav.style.display = 'none';
             }
-
             showPage('dashboardPage');
         } else {
             currentUser = null;
@@ -184,12 +181,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    window.showPage = (pageId) => {
+    const showPage = (pageId) => {
         document.querySelectorAll('.page').forEach(p => { p.style.display = 'none'; });
         document.getElementById(pageId).style.display = 'block';
 
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        const activeNavItem = document.querySelector(`.nav-item[onclick*="'${pageId}'"]`);
+        const activeNavItem = document.querySelector(`.nav-item[data-page='${pageId}']`);
         if(activeNavItem) activeNavItem.classList.add('active');
 
         const loadFunction = {
@@ -360,9 +357,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('attendanceDate').addEventListener('change', loadAttendance);
     document.getElementById('attendanceGroupFilter').addEventListener('change', loadAttendance);
 
-    // --- EVENT LISTENERS ---
-
-    // Auth form toggling
     document.getElementById('showRegister').addEventListener('click', (e) => {
         e.preventDefault();
         document.getElementById('loginForm').style.display = 'none';
@@ -375,18 +369,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('registerForm').style.display = 'none';
     });
 
-    // Main navigation
-    document.querySelector('.bottom-nav').addEventListener('click', (e) => {
-        const navItem = e.target.closest('.nav-item');
-        if (navItem) {
-            const pageId = navItem.dataset.page;
-            if (pageId) {
-                showPage(pageId);
-            }
-        }
-    });
-
-    // Modal buttons
     document.getElementById('settingsBtn').addEventListener('click', () => openModal('settingsModal'));
     document.getElementById('logoutBtn').addEventListener('click', () => logoutUser());
     document.getElementById('addStudentBtn').addEventListener('click', () => openModal('addStudentModal'));
@@ -397,7 +379,6 @@ document.addEventListener('DOMContentLoaded', () => {
         openModal('changePasswordModal');
     });
 
-    // Close all modals
     document.querySelectorAll('.close-modal-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const modalId = btn.dataset.modalId;
@@ -405,5 +386,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 closeModal(modalId);
             }
         });
+    });
+
+    document.querySelector('.bottom-nav').addEventListener('click', (e) => {
+        const navItem = e.target.closest('.nav-item');
+        if (navItem) {
+            const pageId = navItem.dataset.page;
+            if (pageId) {
+                showPage(pageId);
+            }
+        }
     });
 });
