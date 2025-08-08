@@ -185,11 +185,29 @@
           <span class="close-btn" onclick="closeModal('settingsModal')">&times;</span>
           <h3>Sozlamalar</h3>
           <div class="settings-content">
-              <button class="btn primary-btn" onclick="sendPasswordReset()">Parolni o'zgartirish</button>
+              <button class="btn primary-btn" onclick="openModal('changePasswordModal'); closeModal('settingsModal');">Parolni o'zgartirish</button>
               <p style="margin-top: 2rem; text-align: center; color: var(--gray-color);">
                   Qo'llab-quvvatlash uchun telegramdan <a href="https://t.me/Dajhepu" target="_blank">@Dajhepu</a> ga yozing.
               </p>
           </div>
+      </div>
+  </div>
+
+  <!-- Change Password Modal -->
+  <div id="changePasswordModal" class="modal">
+      <div class="modal-content">
+          <span class="close-btn" onclick="closeModal('changePasswordModal')">&times;</span>
+          <h3>Parolni o'zgartirish</h3>
+          <form id="changePasswordForm">
+              <div id="newPasswordSection">
+                  <input type="password" id="newPassword" placeholder="Yangi parol" required>
+              </div>
+              <div id="reauthSection" style="display: none;">
+                  <p>Xavfsizlik uchun joriy parolingizni qayta kiriting:</p>
+                  <input type="password" id="currentPassword" placeholder="Joriy parol">
+              </div>
+              <button type="submit" class="btn primary-btn">Saqlash</button>
+          </form>
       </div>
   </div>
 

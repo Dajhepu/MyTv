@@ -18,7 +18,11 @@ import {
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   signOut, 
-  onAuthStateChanged 
+  onAuthStateChanged,
+  sendPasswordResetEmail,
+  updatePassword,
+  EmailAuthProvider,
+  reauthenticateWithCredential
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 // Firebase configuration
@@ -35,67 +39,45 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const database = getDatabase(app);
+const db = getDatabase(app);
 const auth = getAuth(app);
 
-// Global variables
+// --- GLOBAL STATE ---
 let currentUser = null;
-let isInitialized = false;
-let payments = [];
-let studentsForPayments = [];
+let viewingUid = null; // For admin to view other users' data
+const adminEmail = "rahimboyislombek@gmail.com";
 
-// Initialize the app
-document.addEventListener('DOMContentLoaded', () => {
-  const mainApp = document.getElementById('mainApp');
-  const authSection = document.getElementById('authSection');
-  
-  if (!authSection) {
-    console.error('authSection element not found!');
-    return;
-  }
-  
-  if (isInitialized) return;
-  isInitialized = true;
-  
-  // Set default date to today
-  const today = new Date().toISOString().split('T')[0];
-  const attendanceDateInput = document.getElementById('attendanceDate');
-  if (attendanceDateInput) {
-    attendanceDateInput.value = today;
-  }
-  
-  // Check authentication state
-  onAuthStateChanged(auth, (user) => {
-    const bottomNav = document.querySelector('.bottom-nav');
-    
+// --- DOM ELEMENTS ---
+const authSection = document.getElementById('authSection');
+const mainApp = document.getElementById('mainApp');
+const adminControls = document.getElementById('adminControls');
+const adminUserSelect = document.getElementById('adminUserSelect');
+const adminNav = document.getElementById('adminNav');
+
+// --- AUTH STATE & NAVIGATION ---
+
+onAuthStateChanged(auth, (user) => {
     if (user) {
-      currentUser = user;
-      document.getElementById('userEmail').textContent = user.email;
-      document.querySelector('.logout-btn').style.display = 'inline-flex';
-      
-      authSection.style.display = 'none';
-      if (mainApp) mainApp.style.display = 'block';
-      if (bottomNav) bottomNav.style.display = 'flex';
-      
-      showPage('dashboardSection');
-      loadDashboardData();
+        currentUser = user;
+        viewingUid = user.uid;
+        authSection.style.display = 'none';
+        mainApp.style.display = 'block';
+
+        if (user.email === adminEmail) {
+            adminControls.style.display = 'block';
+            adminNav.style.display = 'flex';
+            loadUsersForAdminDropdown();
+        } else {
+            adminControls.style.display = 'none';
+            adminNav.style.display = 'none';
+        }
+        showPage('dashboardPage');
     } else {
-      currentUser = null;
-      document.querySelector('.logout-btn').style.display = 'none';
-      
-      authSection.style.display = 'flex';
-      if (mainApp) mainApp.style.display = 'none';
-      if (bottomNav) bottomNav.style.display = 'none';
-      
-      showPage('authSection');
+        currentUser = null;
+        viewingUid = null;
+        authSection.style.display = 'flex';
+        mainApp.style.display = 'none';
     }
-  }, (error) => {
-    console.error('Auth state check error:', error);
-    showToast('Autentifikatsiya xatosi: ' + error.message, 'error');
-    authSection.style.display = 'flex';
-    if (mainApp) mainApp.style.display = 'none';
-    showPage('authSection');
-  });
 });
 
 // Navigation functions
@@ -144,122 +126,298 @@ function showPage(pageId) {
 
 window.showPage = showPage;
 
-// Form switching functions
-window.showLoginForm = function() {
-  document.getElementById('loginSection').style.display = 'block';
-  document.getElementById('registerSection').style.display = 'none';
-  document.querySelector('.auth-title').textContent = 'Kirish';
-  document.getElementById('passwordInput').value = '';
-  document.getElementById('registerPassword').value = '';
-  document.getElementById('confirmPassword').value = '';
-}
+// --- ADMIN FUNCTIONS ---
 
-window.showRegisterForm = function() {
-  document.getElementById('loginSection').style.display = 'none';
-  document.getElementById('registerSection').style.display = 'block';
-  document.querySelector('.auth-title').textContent = "Ro'yxatdan o'tish";
-  document.getElementById('passwordInput').value = '';
-  document.getElementById('registerPassword').value = '';
-  document.getElementById('confirmPassword').value = '';
-}
+const loadUsersForAdminDropdown = async () => {
+    const usersRef = ref(db, 'users');
+    onValue(usersRef, (snapshot) => {
+        adminUserSelect.innerHTML = '<option value="">View Own Data</option>';
+        if (snapshot.exists()) {
+            snapshot.forEach((childSnapshot) => {
+                const user = childSnapshot.val();
+                const uid = childSnapshot.key;
+                if (uid === currentUser.uid) return;
+                const option = document.createElement('option');
+                option.value = uid;
+                option.textContent = user.profile?.email || uid;
+                adminUserSelect.appendChild(option);
+            });
+        }
+    });
+};
 
-// Authentication functions
-window.loginUser = async function() {
-  const email = document.getElementById('emailInput').value.trim();
-  const password = document.getElementById('passwordInput').value;
-  
-  if (!email || !password) {
-    showToast('Iltimos, email va parolni kiriting!', 'error');
-    return false;
-  }
-  
-  try {
-    const loginButton = document.querySelector('#loginSection button[type="submit"]');
-    const originalText = loginButton.innerHTML;
-    loginButton.disabled = true;
-    loginButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Kirish...';
-    
-    await signInWithEmailAndPassword(auth, email, password);
-    showToast('Muvaffaqiyatli kirildi!', 'success');
-    
-    document.getElementById('emailInput').value = '';
-    document.getElementById('passwordInput').value = '';
-    
-    return true;
-  } catch (error) {
-    console.error('Login error:', error);
-    let errorMessage = 'Kirish xatosi: ';
-    switch (error.code) {
-      case 'auth/user-not-found': errorMessage = 'Bunday email topilmadi'; break;
-      case 'auth/wrong-password': errorMessage = "Noto'g'ri parol"; break;
-      case 'auth/too-many-requests': errorMessage = "Juda ko'p urinishlar"; break;
-      case 'auth/user-disabled': errorMessage = 'Hisob o\'chirilgan'; break;
-      default: errorMessage += error.message;
+adminUserSelect.addEventListener('change', () => {
+    viewingUid = adminUserSelect.value || currentUser.uid;
+    const activePage = document.querySelector('.page[style*="block"]');
+    showPage(activePage ? activePage.id : 'dashboardPage');
+});
+
+const loadAdminUserList = async () => {
+    const listEl = document.getElementById('adminUserManagementList');
+    const usersRef = ref(db, 'users');
+    onValue(usersRef, (snapshot) => {
+        listEl.innerHTML = '';
+        if (snapshot.exists()) {
+            snapshot.forEach((childSnapshot) => {
+                const uid = childSnapshot.key;
+                if (uid === currentUser.uid) return;
+
+                const user = childSnapshot.val();
+                const email = user.profile?.email || 'N/A';
+                const isDisabled = user.profile?.disabled || false;
+
+                const itemEl = document.createElement('div');
+                itemEl.className = 'list-item';
+                itemEl.innerHTML = `
+                    <span>${email}</span>
+                    <button class="btn ${isDisabled ? 'primary-btn' : 'danger-btn'}" style="width: auto;" onclick="toggleUserSuspension('${uid}', ${!isDisabled})">
+                        ${isDisabled ? 'Enable' : 'Suspend'}
+                    </button>
+                `;
+                listEl.appendChild(itemEl);
+            });
+        }
+    });
+};
+
+window.toggleUserSuspension = async (uid, shouldDisable) => {
+    const userProfileRef = ref(db, `users/${uid}/profile`);
+    try {
+        await update(userProfileRef, { disabled: shouldDisable });
+        alert(`User account has been ${shouldDisable ? 'suspended' : 'enabled'}.`);
+    } catch (error) {
+        alert(`Operation failed: ${error.message}`);
     }
-    showToast(errorMessage, 'error');
-    return false;
-  } finally {
-    const loginButton = document.querySelector('#loginSection button[type="submit"]');
-    loginButton.disabled = false;
-    loginButton.innerHTML = '<i class="fas fa-sign-in-alt"></i> Kirish';
-  }
-}
+};
 
-window.registerUser = async function() {
-  const email = document.getElementById('registerEmail').value.trim();
-  const password = document.getElementById('registerPassword').value;
-  const confirmPassword = document.getElementById('confirmPassword').value;
-  
-  if (!email || !password || !confirmPassword) {
-    showToast("Iltimos, barcha maydonlarni to'ldiring!", 'error');
-    return;
-  }
-  
-  if (password.length < 6) {
-    showToast('Parol kamida 6 belgidan iborat bo\'lishi kerak', 'error');
-    return;
-  }
-  
-  if (password !== confirmPassword) {
-    showToast('Parollar mos kelmadi!', 'error');
-    return;
-  }
-  
-  try {
-    const registerButton = document.querySelector('#registerSection button');
-    const originalText = registerButton.innerHTML;
-    registerButton.disabled = true;
-    registerButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Ro\'yxatdan o\'tilmoqda...';
-    
-    await createUserWithEmailAndPassword(auth, email, password);
-    showToast("Muvaffaqiyatli ro'yxatdan o'tildi!", 'success');
-    showLoginForm();
-  } catch (error) {
-    console.error('Registration error:', error);
-    let errorMessage = "Ro'yxatdan o'tish xatosi: ";
-    switch (error.code) {
-      case 'auth/email-already-in-use': errorMessage = "Bu email allaqachon ro'yxatdan o'tgan"; break;
-      case 'auth/invalid-email': errorMessage = "Noto'g'ri email formati"; break;
-      case 'auth/weak-password': errorMessage = 'Parol juda oson'; break;
-      default: errorMessage += error.message;
+// --- DATA READ/WRITE FUNCTIONS ---
+
+const loadDashboardData = async () => {
+    if (!viewingUid) return;
+    const studentCountRef = ref(db, `users/${viewingUid}/students`);
+    const groupCountRef = ref(db, `users/${viewingUid}/groups`);
+    const paymentsRef = ref(db, `users/${viewingUid}/payments`);
+
+    const studentSnapshot = await get(studentCountRef);
+    document.getElementById('studentsCount').textContent = studentSnapshot.size || 0;
+
+    const groupSnapshot = await get(groupCountRef);
+    document.getElementById('groupsCount').textContent = groupSnapshot.size || 0;
+
+    const paymentsSnapshot = await get(paymentsRef);
+    let total = 0;
+    if (paymentsSnapshot.exists()) {
+        paymentsSnapshot.forEach(snap => { total += snap.val().amount; });
     }
-    showToast(errorMessage, 'error');
-  } finally {
-    const registerButton = document.querySelector('#registerSection button');
-    registerButton.disabled = false;
-    registerButton.innerHTML = '<i class="fas fa-user-plus"></i> Ro\'yxatdan o\'tish';
-  }
-}
+    document.getElementById('paymentsTotal').textContent = `${total} so'm`;
+};
 
-window.logoutUser = async function() {
-  try {
-    await signOut(auth);
-    showToast('Chiqildi!', 'info');
-    showPage('authSection');
-  } catch (error) {
-    showToast('Chiqish xatosi: ' + error.message, 'error');
-  }
-}
+const loadGroups = async () => {
+    if (!viewingUid) return;
+    const groupsRef = ref(db, `users/${viewingUid}/groups`);
+    onValue(groupsRef, (snapshot) => {
+        const listEl = document.getElementById('groupsList');
+        const studentGroupSelect = document.getElementById('studentGroup');
+        const attendanceGroupFilter = document.getElementById('attendanceGroupFilter');
+        listEl.innerHTML = '';
+        studentGroupSelect.innerHTML = '<option value="">Select Group</option>';
+        attendanceGroupFilter.innerHTML = '<option value="all">All Groups</option>';
+
+        if (snapshot.exists()) {
+            snapshot.forEach((child) => {
+                const group = child.val();
+                const groupId = child.key;
+                listEl.innerHTML += `<div class="list-item"><span>${group.name} (${group.teacher})</span></div>`;
+                studentGroupSelect.innerHTML += `<option value="${groupId}">${group.name}</option>`;
+                attendanceGroupFilter.innerHTML += `<option value="${groupId}">${group.name}</option>`;
+            });
+        } else {
+            listEl.innerHTML = '<p>No groups found.</p>';
+        }
+    });
+};
+
+const loadStudents = async () => {
+    if (!viewingUid) return;
+    const studentsRef = ref(db, `users/${viewingUid}/students`);
+    onValue(studentsRef, (snapshot) => {
+        const listEl = document.getElementById('studentsList');
+        listEl.innerHTML = '';
+        if (snapshot.exists()) {
+            snapshot.forEach((child) => listEl.innerHTML += `<div class="list-item"><span>${child.val().name}</span></div>`);
+        } else {
+            listEl.innerHTML = '<p>No students found.</p>';
+        }
+    });
+};
+
+const loadPayments = async () => {
+    if (!viewingUid) return;
+    const paymentsRef = ref(db, `users/${viewingUid}/payments`);
+    onValue(paymentsRef, (snapshot) => {
+        const listEl = document.getElementById('paymentsList');
+        listEl.innerHTML = '';
+        if (snapshot.exists()) {
+            snapshot.forEach((child) => {
+                const p = child.val();
+                listEl.innerHTML += `<div class="list-item"><span>${p.studentName}: ${p.amount} so'm on ${p.date}</span></div>`;
+            });
+        } else {
+            listEl.innerHTML = '<p>No payments found.</p>';
+        }
+    });
+};
+
+const loadAttendance = async () => {
+    if (!viewingUid) return;
+    const date = document.getElementById('attendanceDate').value;
+    const groupId = document.getElementById('attendanceGroupFilter').value;
+    const studentsRef = ref(db, `users/${viewingUid}/students`);
+    const listEl = document.getElementById('attendanceList');
+    listEl.innerHTML = '';
+    const snapshot = await get(studentsRef);
+    if (snapshot.exists()) {
+        snapshot.forEach(async (child) => {
+            const student = child.val();
+            const studentId = child.key;
+            if (groupId === 'all' || student.groupId === groupId) {
+                const attRef = ref(db, `users/${viewingUid}/attendance/${date}/${studentId}`);
+                const attSnapshot = await get(attRef);
+                const isPresent = attSnapshot.exists() && attSnapshot.val().present;
+                listEl.innerHTML += `<div class="list-item"><span>${student.name}</span><input type="checkbox" ${isPresent ? 'checked' : ''} onchange="updateAttendance('${date}', '${studentId}', this.checked)"></div>`;
+            }
+        });
+    }
+};
+
+document.getElementById('addStudentForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const studentName = document.getElementById('studentName').value;
+    const studentPhone = document.getElementById('studentPhone').value;
+    const groupId = document.getElementById('studentGroup').value;
+    if (!studentName || !groupId || !viewingUid) return;
+    await push(ref(db, `users/${viewingUid}/students`), { name: studentName, phone: studentPhone, groupId: groupId });
+    closeModal('addStudentModal');
+});
+
+document.getElementById('addGroupForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const groupName = document.getElementById('groupName').value;
+    const groupTeacher = document.getElementById('groupTeacher').value;
+    if (!groupName || !groupTeacher || !viewingUid) return;
+    await push(ref(db, `users/${viewingUid}/groups`), { name: groupName, teacher: groupTeacher });
+    closeModal('addGroupModal');
+});
+
+document.getElementById('addPaymentForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const studentId = document.getElementById('paymentStudent').value;
+    const amount = document.getElementById('paymentAmount').value;
+    const date = document.getElementById('paymentDate').value;
+    if (!studentId || !amount || !date || !viewingUid) return;
+    const studentName = document.querySelector('#paymentStudent option:checked').textContent;
+    await push(ref(db, `users/${viewingUid}/payments`), { studentId, studentName, amount: Number(amount), date });
+    closeModal('addPaymentModal');
+});
+
+window.updateAttendance = async (date, studentId, isPresent) => {
+    if (!viewingUid) return;
+    await set(ref(db, `users/${viewingUid}/attendance/${date}/${studentId}`), { present: isPresent });
+};
+
+// --- MODALS & LISTENERS ---
+const loadStudentsForPayments = async () => {
+    if (!viewingUid) return;
+    const studentsRef = ref(db, `users/${viewingUid}/students`);
+    const snapshot = await get(studentsRef);
+    const selectEl = document.getElementById('paymentStudent');
+    selectEl.innerHTML = '<option value="">Select Student</option>';
+    if(snapshot.exists()) snapshot.forEach(c => { selectEl.innerHTML += `<option value="${c.key}">${c.val().name}</option>`; });
+};
+
+window.openModal = (modalId) => {
+    if (modalId === 'addPaymentModal') loadStudentsForPayments();
+    if (modalId === 'changePasswordModal') closeModal('settingsModal');
+    document.getElementById(modalId).style.display = 'flex';
+};
+window.closeModal = (modalId) => document.getElementById(modalId).style.display = 'none';
+
+// --- INITIAL LOAD ---
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('attendanceDate').valueAsDate = new Date();
+    document.getElementById('attendanceDate').addEventListener('change', loadAttendance);
+    document.getElementById('attendanceGroupFilter').addEventListener('change', loadAttendance);
+});
+
+// --- AUTHENTICATION ---
+
+window.registerUser = async () => {
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
+    if (!email || !password) return alert("Please enter email and password.");
+    try {
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        await set(ref(db, `users/${cred.user.uid}/profile`), { email, disabled: false });
+        alert("Registration successful!");
+    } catch (error) { alert(`Registration failed: ${error.message}`); }
+};
+
+window.loginUser = async () => {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    if (!email || !password) return alert("Please enter email and password.");
+    try {
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        const userProfileRef = ref(db, `users/${cred.user.uid}/profile`);
+        const snapshot = await get(userProfileRef);
+        if (snapshot.exists() && snapshot.val().disabled) {
+            await signOut(auth);
+            alert("This account has been suspended by the administrator.");
+        }
+    } catch (error) { alert(`Login failed: ${error.message}`); }
+};
+
+window.logoutUser = () => signOut(auth);
+
+document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const newPassword = document.getElementById('newPassword').value;
+    if (!newPassword) return alert('Please enter a new password.');
+
+    try {
+        await updatePassword(currentUser, newPassword);
+        alert('Password updated successfully!');
+        closeModal('changePasswordModal');
+    } catch (error) {
+        if (error.code === 'auth/requires-recent-login') {
+            alert('This operation is sensitive and requires recent authentication. Please enter your current password to continue.');
+            document.getElementById('reauthSection').style.display = 'block';
+            const currentPassword = await new Promise((resolve) => {
+                const form = document.getElementById('changePasswordForm');
+                const handler = (submitEvent) => {
+                    submitEvent.preventDefault();
+                    form.removeEventListener('submit', handler);
+                    resolve(document.getElementById('currentPassword').value);
+                };
+                form.addEventListener('submit', handler);
+            });
+
+            if (currentPassword) {
+                const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
+                try {
+                    await reauthenticateWithCredential(currentUser, credential);
+                    await updatePassword(currentUser, newPassword);
+                    alert('Password updated successfully!');
+                    closeModal('changePasswordModal');
+                } catch (reauthError) {
+                    alert(`Re-authentication failed: ${reauthError.message}`);
+                }
+            }
+        } else {
+            alert(`Password update failed: ${error.message}`);
+        }
+    }
+});
 
 // Student functions
 window.showAddStudentForm = function() {
