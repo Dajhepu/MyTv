@@ -3,270 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Oodi CRM</title>
+  <title>O'quv Markazi CRM</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script type="module" src="app.js"></script>
 </head>
 <body>
-  <div id="mainApp" style="display: none;">
-    <header class="app-header">
-      <h1>Oodi CRM</h1>
-      <div class="user-info">
-        <span id="userEmail"></span>
-        <button class="btn logout-btn" onclick="logoutUser()">
-          <i class="fas fa-sign-out-alt"></i> Chiqish
-        </button>
-      </div>
-    </header>
 
-    <main>
-      <section id="dashboardSection" class="page">
-        <div class="page-header">
-          <h2>Bosh sahifa</h2>
-        </div>
-        <div class="stats-grid">
-          <div class="stat-card">
-            <i class="fas fa-user-graduate stat-icon"></i>
-            <h3 id="studentsCount">0</h3>
-            <p>O'quvchilar</p>
-          </div>
-          <div class="stat-card">
-            <i class="fas fa-calendar-check stat-icon"></i>
-            <h3 id="attendanceCount">0</h3>
-            <p>Bugun keldi</p>
-          </div>
-          <div class="stat-card">
-            <i class="fas fa-money-bill-wave stat-icon"></i>
-            <h3 id="totalPayments">0 so'm</h3>
-            <p>Umumiy to'lovlar</p>
-          </div>
-        </div>
-        <div class="quick-actions">
-          <button class="btn primary-btn" onclick="showPage('studentsPage')">
-            <i class="fas fa-plus"></i> O'quvchi qo'shish
-          </button>
-          <button class="btn primary-btn" onclick="showPage('attendancePage')">
-            <i class="fas fa-calendar-check"></i> Davomat
-          </button>
-          <button class="btn primary-btn" onclick="showAddPaymentModal()">
-            <i class="fas fa-plus"></i> To'lov qo'shish
-          </button>
-        </div>
-      </section>
-
-      <section id="studentsPage" class="page" style="display: none;">
-        <div class="page-header">
-          <h2>O'quvchilar</h2>
-          <button class="btn primary-btn" onclick="showAddStudentForm()">
-            <i class="fas fa-plus"></i> Qo'shish
-          </button>
-        </div>
-        <div id="addStudentForm" class="form-container" style="display: none;">
-          <h3>Yangi o'quvchi qo'shish</h3>
-          <div class="input-group">
-            <i class="fas fa-user"></i>
-            <input type="text" id="studentName" placeholder="O'quvchi ismi">
-          </div>
-          <div class="input-group">
-            <i class="fas fa-phone"></i>
-            <input type="tel" id="studentPhone" placeholder="Telefon raqami">
-          </div>
-          <div class="input-group">
-            <i class="fas fa-envelope"></i>
-            <input type="email" id="studentEmail" placeholder="Elektron pochta">
-          </div>
-          <div class="form-actions">
-            <button class="btn secondary-btn" onclick="showAddStudentForm()">Bekor qilish</button>
-            <button class="btn primary-btn" onclick="addStudent()">
-              <i class="fas fa-save"></i> Saqlash
-            </button>
-          </div>
-        </div>
-        <div id="studentsList"></div>
-      </section>
-
-      <section id="attendancePage" class="page" style="display: none;">
-        <div class="page-header">
-          <h2>Davomat</h2>
-          <div class="input-group">
-            <i class="far fa-calendar-alt"></i>
-            <input type="date" id="attendanceDate">
-          </div>
-          <button class="btn primary-btn" onclick="exportAttendanceReport('pdf')">
-            <i class="fas fa-file-pdf"></i> PDF
-          </button>
-          <button class="btn primary-btn" onclick="exportAttendanceReport('excel')">
-            <i class="fas fa-file-excel"></i> Excel
-          </button>
-        </div>
-        <div class="page-actions">
-          <button class="btn primary-btn" onclick="markAllPresent()">
-            <i class="fas fa-check"></i> Hamma keldi
-          </button>
-        </div>
-        <div id="attendanceList"></div>
-      </section>
-
-      <section id="paymentsPage" class="page" style="display: none;">
-        <div class="page-header">
-          <h2>To'lovlar</h2>
-          <button class="btn primary-btn" onclick="showAddPaymentModal()">
-            <i class="fas fa-plus"></i> To'lov qo'shish
-          </button>
-          <button class="btn primary-btn" onclick="exportPaymentsReport('pdf')">
-            <i class="fas fa-file-pdf"></i> PDF
-          </button>
-          <button class="btn primary-btn" onclick="exportPaymentsReport('excel')">
-            <i class="fas fa-file-excel"></i> Excel
-          </button>
-        </div>
-        <div class="stats-grid">
-          <div class="stat-card">
-            <i class="fas fa-money-bill-wave stat-icon"></i>
-            <h3 id="totalPayments">0 so'm</h3>
-            <p>Umumiy to'lovlar</p>
-          </div>
-          <div class="stat-card">
-            <i class="fas fa-check-circle stat-icon"></i>
-            <h3 id="paidCount">0</h3>
-            <p>To'langan</p>
-          </div>
-          <div class="stat-card">
-            <i class="fas fa-hourglass-half stat-icon"></i>
-            <h3 id="pendingCount">0</h3>
-            <p>Kutilmoqda</p>
-          </div>
-        </div>
-        <div class="filters">
-          <div class="input-group">
-            <i class="fas fa-search"></i>
-            <input type="text" id="paymentSearch" placeholder="Qidirish..." oninput="filterPayments()">
-          </div>
-          <select id="paymentMonth" onchange="loadPayments()">
-            <option value="">Barcha oylar</option>
-            <option value="01">Yanvar</option>
-            <option value="02">Fevral</option>
-            <option value="03">Mart</option>
-            <option value="04">Aprel</option>
-            <option value="05">May</option>
-            <option value="06">Iyun</option>
-            <option value="07">Iyul</option>
-            <option value="08">Avgust</option>
-            <option value="09">Sentabr</option>
-            <option value="10">Oktabr</option>
-            <option value="11">Noyabr</option>
-            <option value="12">Dekabr</option>
-          </select>
-        </div>
-        <div id="paymentsList"></div>
-      </section>
-    </main>
-
-    <nav class="bottom-nav">
-      <div class="nav-item active" onclick="showPage('dashboardSection')">
-        <i class="fas fa-home"></i>
-        <span>Bosh sahifa</span>
-      </div>
-      <div class="nav-item" onclick="showPage('studentsPage')">
-        <i class="fas fa-user-graduate"></i>
-        <span>O'quvchilar</span>
-      </div>
-      <div class="nav-item" onclick="showPage('attendancePage')">
-        <i class="fas fa-calendar-check"></i>
-        <span>Davomat</span>
-      </div>
-      <div class="nav-item" onclick="showPage('paymentsPage')">
-        <i class="fas fa-money-bill-wave"></i>
-        <span>To'lovlar</span>
-      </div>
-    </nav>
-
-    <div id="paymentModal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>To'lov qo'shish</h3>
-          <span class="modal-close" onclick="closeModal('paymentModal')">×</span>
-        </div>
-        <form id="paymentForm" onsubmit="addPayment(event)">
-          <div class="input-group">
-            <label for="paymentStudent">O'quvchi</label>
-            <select id="paymentStudent">
-              <option value="">O'quvchini tanlang</option>
-            </select>
-          </div>
-          <div class="input-group">
-            <label for="paymentAmount">To'lov miqdori</label>
-            <input type="number" id="paymentAmount" placeholder="Miqdor (so'm)">
-          </div>
-          <div class="input-group">
-            <label for="paymentDate">Sana</label>
-            <input type="date" id="paymentDate">
-          </div>
-          <div class="input-group">
-            <label for="paymentType">To'lov turi</label>
-            <select id="paymentType">
-              <option value="naqd">Naqd</option>
-              <option value="karta">Karta</option>
-              <option value="bank">Bank</option>
-              <option value="click">Click</option>
-              <option value="payme">Payme</option>
-            </select>
-          </div>
-          <div class="input-group">
-            <label for="paymentComment">Izoh</label>
-            <input type="text" id="paymentComment" placeholder="Izoh (ixtiyoriy)">
-          </div>
-          <div class="form-actions">
-            <button type="button" class="btn secondary-btn" onclick="closeModal('paymentModal')">Bekor qilish</button>
-            <button type="submit" class="btn primary-btn">
-              <i class="fas fa-save"></i> Saqlash
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <div id="confirmModal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Tasdiqlash</h3>
-          <span class="modal-close" onclick="closeModal('confirmModal')">×</span>
-        </div>
-        <p>Haqiqatan ham ushbu to'lovni o'chirmoqchimisiz?</p>
-        <div class="form-actions">
-          <button class="btn secondary-btn" onclick="closeModal('confirmModal')">Bekor qilish</button>
-          <button id="confirmDeleteBtn" class="btn danger-btn">
-            <i class="fas fa-trash"></i> O'chirish
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="authSection" class="auth-section">
+  <!-- Authentication Section -->
+  <div id="authSection">
     <div class="auth-container">
-      <h2 class="auth-title">Kirish</h2>
-      <div id="loginSection">
+      <h2>Kirish</h2>
+      <div id="loginForm">
         <div class="input-group">
           <i class="fas fa-envelope"></i>
-          <input type="email" id="emailInput" placeholder="Elektron pochta">
+          <input type="email" id="loginEmail" placeholder="Elektron pochta">
         </div>
         <div class="input-group">
           <i class="fas fa-lock"></i>
-          <input type="password" id="passwordInput" placeholder="Parol">
+          <input type="password" id="loginPassword" placeholder="Parol">
         </div>
-        <button class="btn primary-btn" type="submit" onclick="loginUser()">
-          <i class="fas fa-sign-in-alt"></i> Kirish
-        </button>
-        <p class="auth-switch">
-          Akkauntingiz yo'qmi? 
-          <a href="#" onclick="showRegisterForm()">Ro'yxatdan o'tish</a>
-        </p>
+        <button class="btn primary-btn" onclick="loginUser()">Kirish</button>
+        <p class="auth-switch">Akkauntingiz yo'qmi? <a href="#" onclick="toggleAuthForms()">Ro'yxatdan o'tish</a></p>
       </div>
-      <div id="registerSection" style="display: none;">
+      <div id="registerForm" style="display: none;">
         <div class="input-group">
           <i class="fas fa-envelope"></i>
           <input type="email" id="registerEmail" placeholder="Elektron pochta">
@@ -275,21 +34,165 @@
           <i class="fas fa-lock"></i>
           <input type="password" id="registerPassword" placeholder="Parol">
         </div>
-        <div class="input-group">
-          <i class="fas fa-lock"></i>
-          <input type="password" id="confirmPassword" placeholder="Parolni tasdiqlash">
-        </div>
-        <button class="btn primary-btn" onclick="registerUser()">
-          <i class="fas fa-user-plus"></i> Ro'yxatdan o'tish
-        </button>
-        <p class="auth-switch">
-          Akkauntingiz bormi? 
-          <a href="#" onclick="showLoginForm()">Kirish</a>
-        </p>
+        <button class="btn primary-btn" onclick="registerUser()">Ro'yxatdan o'tish</button>
+        <p class="auth-switch">Akkauntingiz bormi? <a href="#" onclick="toggleAuthForms()">Kirish</a></p>
       </div>
     </div>
   </div>
 
-  <div id="toastContainer" class="toast-container"></div>
+  <!-- Main Application -->
+  <div id="mainApp" style="display: none;">
+    <header class="app-header">
+      <h1>CRM</h1>
+      <div class="user-info">
+        <div id="adminControls" style="display: none;">
+          <select id="adminUserSelect"></select>
+        </div>
+        <button class="btn" style="background: none; width: auto; padding: 0.5rem;" onclick="openModal('settingsModal')">
+            <i class="fas fa-cog" style="font-size: 1.5rem; color: white;"></i>
+        </button>
+        <button class="btn logout-btn" onclick="logoutUser()">
+          <i class="fas fa-sign-out-alt"></i> Chiqish
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <!-- Dashboard Page -->
+      <section id="dashboardPage" class="page">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <i class="fas fa-user-graduate"></i>
+            <h3 id="studentsCount">0</h3>
+            <p>O'quvchilar</p>
+          </div>
+          <div class="stat-card">
+            <i class="fas fa-users"></i>
+            <h3 id="groupsCount">0</h3>
+            <p>Guruhlar</p>
+          </div>
+          <div class="stat-card">
+            <i class="fas fa-money-bill-wave"></i>
+            <h3 id="paymentsTotal">0 so'm</h3>
+            <p>Umumiy To'lovlar</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Students Page -->
+      <section id="studentsPage" class="page" style="display: none;">
+        <div class="page-header">
+          <h2>O'quvchilar</h2>
+          <button class="btn primary-btn" onclick="openModal('addStudentModal')"><i class="fas fa-plus"></i> O'quvchi qo'shish</button>
+        </div>
+        <div id="studentsList"></div>
+      </section>
+
+      <!-- Groups Page -->
+      <section id="groupsPage" class="page" style="display: none;">
+        <div class="page-header">
+          <h2>Guruhlar</h2>
+          <button class="btn primary-btn" onclick="openModal('addGroupModal')"><i class="fas fa-plus"></i> Guruh qo'shish</button>
+        </div>
+        <div id="groupsList"></div>
+      </section>
+
+      <!-- Attendance Page -->
+      <section id="attendancePage" class="page" style="display: none;">
+        <div class="page-header">
+            <h2>Davomat</h2>
+            <div class="filters">
+                <input type="date" id="attendanceDate">
+                <select id="attendanceGroupFilter"></select>
+            </div>
+        </div>
+        <div id="attendanceList"></div>
+      </section>
+
+      <!-- Payments Page -->
+      <section id="paymentsPage" class="page" style="display: none;">
+        <div class="page-header">
+          <h2>To'lovlar</h2>
+          <button class="btn primary-btn" onclick="openModal('addPaymentModal')"><i class="fas fa-plus"></i> To'lov qo'shish</button>
+        </div>
+        <div id="paymentsList"></div>
+      </section>
+
+      <!-- Admin Page -->
+      <section id="adminPage" class="page" style="display: none;">
+          <div class="page-header">
+              <h2>Admin Panel</h2>
+          </div>
+          <div id="adminUserManagementList"></div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav">
+      <div class="nav-item active" onclick="showPage('dashboardPage')"><i class="fas fa-home"></i><span>Bosh sahifa</span></div>
+      <div class="nav-item" onclick="showPage('studentsPage')"><i class="fas fa-user-graduate"></i><span>O'quvchilar</span></div>
+      <div class="nav-item" onclick="showPage('groupsPage')"><i class="fas fa-users"></i><span>Guruhlar</span></div>
+      <div class="nav-item" onclick="showPage('attendancePage')"><i class="fas fa-calendar-check"></i><span>Davomat</span></div>
+      <div class="nav-item" onclick="showPage('paymentsPage')"><i class="fas fa-money-bill-wave"></i><span>To'lovlar</span></div>
+      <div id="adminNav" class="nav-item" style="display: none;" onclick="showPage('adminPage')"><i class="fas fa-user-shield"></i><span>Admin</span></div>
+    </nav>
+  </div>
+
+  <!-- Modals -->
+  <!-- Add Student Modal -->
+  <div id="addStudentModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal('addStudentModal')">&times;</span>
+      <h3>O'quvchi qo'shish</h3>
+      <form id="addStudentForm">
+        <input type="text" id="studentName" placeholder="Ismi" required>
+        <input type="text" id="studentPhone" placeholder="Telefon raqami">
+        <select id="studentGroup" required></select>
+        <button type="submit" class="btn primary-btn">Saqlash</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Group Modal -->
+  <div id="addGroupModal" class="modal">
+      <div class="modal-content">
+          <span class="close-btn" onclick="closeModal('addGroupModal')">&times;</span>
+          <h3>Guruh qo'shish</h3>
+          <form id="addGroupForm">
+              <input type="text" id="groupName" placeholder="Guruh nomi" required>
+              <input type="text" id="groupTeacher" placeholder="O'qituvchi" required>
+              <button type="submit" class="btn primary-btn">Saqlash</button>
+          </form>
+      </div>
+  </div>
+
+  <!-- Add Payment Modal -->
+  <div id="addPaymentModal" class="modal">
+      <div class="modal-content">
+          <span class="close-btn" onclick="closeModal('addPaymentModal')">&times;</span>
+          <h3>To'lov qo'shish</h3>
+          <form id="addPaymentForm">
+              <select id="paymentStudent" required></select>
+              <input type="number" id="paymentAmount" placeholder="Miqdori" required>
+              <input type="date" id="paymentDate" required>
+              <button type="submit" class="btn primary-btn">Saqlash</button>
+          </form>
+      </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal">
+      <div class="modal-content">
+          <span class="close-btn" onclick="closeModal('settingsModal')">&times;</span>
+          <h3>Sozlamalar</h3>
+          <div class="settings-content">
+              <button class="btn primary-btn" onclick="sendPasswordReset()">Parolni o'zgartirish</button>
+              <p style="margin-top: 2rem; text-align: center; color: var(--gray-color);">
+                  Qo'llab-quvvatlash uchun telegramdan <a href="https://t.me/Dajhepu" target="_blank">@Dajhepu</a> ga yozing.
+              </p>
+          </div>
+      </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
 </body>
 </html>
