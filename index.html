@@ -106,8 +106,8 @@
         <div class="page-header">
             <h2>Davomat</h2>
             <div class="filters">
-                <input type="date" id="attendanceDate">
-                <select id="attendanceGroupFilter"></select>
+                <input type="date" id="attendanceDate" aria-label="Davomat sanasi">
+                <select id="attendanceGroupFilter" aria-label="Guruhni tanlang"></select>
             </div>
         </div>
         <div id="attendanceList"></div>
@@ -142,27 +142,25 @@
   </div>
 
   <!-- Modals -->
-  <!-- Add Student Modal -->
   <div id="addStudentModal" class="modal">
     <div class="modal-content">
-      <span class="close-btn close-modal-btn" data-modal-id="addStudentModal">&times;</span>
+      <span class="close-btn" data-modal-id="addStudentModal">&times;</span>
       <h3>O'quvchi qo'shish</h3>
       <form id="addStudentForm">
         <label for="studentName" class="visually-hidden">O'quvchi ismi</label>
         <input type="text" id="studentName" placeholder="Ismi" required>
         <label for="studentPhone" class="visually-hidden">Telefon raqami</label>
-        <input type="text" id="studentPhone" placeholder="Telefon raqami">
+        <input type="tel" id="studentPhone" placeholder="Telefon raqami">
         <label for="studentGroup" class="visually-hidden">Guruh</label>
-        <select id="studentGroup" required></select>
+        <select id="studentGroup" required aria-label="Guruhni tanlang"></select>
         <button type="submit" class="btn primary-btn">Saqlash</button>
       </form>
     </div>
   </div>
 
-  <!-- Add Group Modal -->
   <div id="addGroupModal" class="modal">
       <div class="modal-content">
-          <span class="close-btn close-modal-btn" data-modal-id="addGroupModal">&times;</span>
+          <span class="close-btn" data-modal-id="addGroupModal">&times;</span>
           <h3>Guruh qo'shish</h3>
           <form id="addGroupForm">
               <label for="groupName" class="visually-hidden">Guruh nomi</label>
@@ -174,14 +172,13 @@
       </div>
   </div>
 
-  <!-- Add Payment Modal -->
   <div id="addPaymentModal" class="modal">
       <div class="modal-content">
-          <span class="close-btn close-modal-btn" data-modal-id="addPaymentModal">&times;</span>
+          <span class="close-btn" data-modal-id="addPaymentModal">&times;</span>
           <h3>To'lov qo'shish</h3>
           <form id="addPaymentForm">
               <label for="paymentStudent" class="visually-hidden">O'quvchi</label>
-              <select id="paymentStudent" required></select>
+              <select id="paymentStudent" required aria-label="O'quvchini tanlang"></select>
               <label for="paymentAmount" class="visually-hidden">Miqdori</label>
               <input type="number" id="paymentAmount" placeholder="Miqdori" required>
               <label for="paymentDate" class="visually-hidden">Sana</label>
@@ -191,10 +188,9 @@
       </div>
   </div>
 
-  <!-- Settings Modal -->
   <div id="settingsModal" class="modal">
       <div class="modal-content">
-          <span class="close-btn close-modal-btn" data-modal-id="settingsModal">&times;</span>
+          <span class="close-btn" data-modal-id="settingsModal">&times;</span>
           <h3>Sozlamalar</h3>
           <div class="settings-content">
               <button id="changePasswordBtn" class="btn primary-btn">Parolni o'zgartirish</button>
@@ -205,10 +201,9 @@
       </div>
   </div>
 
-  <!-- Change Password Modal -->
   <div id="changePasswordModal" class="modal">
       <div class="modal-content">
-          <span class="close-btn close-modal-btn" data-modal-id="changePasswordModal">&times;</span>
+          <span class="close-btn" data-modal-id="changePasswordModal">&times;</span>
           <h3>Parolni o'zgartirish</h3>
           <form id="changePasswordForm">
               <div id="newPasswordSection">
@@ -225,6 +220,6 @@
       </div>
   </div>
 
-  <script type="module" src="app_fixed.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>

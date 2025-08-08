@@ -1,10 +1,8 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, set, push, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
 document.addEventListener('DOMContentLoaded', () => {
-
-    // Firebase imports
-    const { initializeApp } = require("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
-    const { getDatabase, ref, set, push, onValue, get, update } = require("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js");
-    const { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, EmailAuthProvider, reauthenticateWithCredential } = require("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
-
     // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyDVaA2Q7w5HxX6ijN574ci2ROlk22t7-YU",
@@ -24,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- GLOBAL STATE ---
     let currentUser = null;
-    let viewingUid = null; // For admin to view other users' data
+    let viewingUid = null;
     const adminEmail = "rahimboyislombek@gmail.com";
 
     // --- DOM ELEMENTS ---
@@ -35,11 +33,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminNav = document.getElementById('adminNav');
 
     // --- ADMIN FUNCTIONS ---
-
     const loadUsersForAdminDropdown = async () => {
         const usersRef = ref(db, 'users');
         onValue(usersRef, (snapshot) => {
-            adminUserSelect.innerHTML = '<option value="">View Own Data</option>';
+            adminUserSelect.innerHTML = '<option value="">O\'z ma\'lumotlarim</option>';
             if (snapshot.exists()) {
                 snapshot.forEach((childSnapshot) => {
                     const user = childSnapshot.val();
@@ -69,17 +66,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 snapshot.forEach((childSnapshot) => {
                     const uid = childSnapshot.key;
                     if (uid === currentUser.uid) return;
-
                     const user = childSnapshot.val();
-                    const email = user.profile?.email || 'N/A';
+                    const email = user.profile?.email || 'Noma\'lum';
                     const isDisabled = user.profile?.disabled || false;
-
                     const itemEl = document.createElement('div');
                     itemEl.className = 'list-item';
                     itemEl.innerHTML = `
                         <span>${email}</span>
-                        <button class="btn ${isDisabled ? 'primary-btn' : 'danger-btn'}" style="width: auto;" onclick="toggleUserSuspension('${uid}', ${!isDisabled})">
-                            ${isDisabled ? 'Enable' : 'Suspend'}
+                        <button class="btn ${isDisabled ? 'primary-btn' : 'danger-btn'}"
+                                style="width: auto;"
+                                data-uid="${uid}"
+                                data-disable="${!isDisabled}">
+                            ${isDisabled ? 'Yoqish' : 'To\'xtatish'}
                         </button>
                     `;
                     listEl.appendChild(itemEl);
@@ -88,18 +86,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    window.toggleUserSuspension = async (uid, shouldDisable) => {
+    document.getElementById('adminUserManagementList').addEventListener('click', (e) => {
+        if (e.target.tagName === 'BUTTON') {
+            const uid = e.target.dataset.uid;
+            const shouldDisable = e.target.dataset.disable === 'true';
+            toggleUserSuspension(uid, shouldDisable);
+        }
+    });
+
+    const toggleUserSuspension = async (uid, shouldDisable) => {
         const userProfileRef = ref(db, `users/${uid}/profile`);
         try {
             await update(userProfileRef, { disabled: shouldDisable });
-            alert(`User account has been ${shouldDisable ? 'suspended' : 'enabled'}.`);
+            alert(`Foydalanuvchi hisobi ${shouldDisable ? 'to\'xtatildi' : 'yoqildi'}.`);
         } catch (error) {
-            alert(`Operation failed: ${error.message}`);
+            alert(`Operatsiya amalga oshmadi: ${error.message}`);
         }
     };
 
     // --- AUTHENTICATION ---
-
     const loginUser = async (email, password) => {
         try {
             const cred = await signInWithEmailAndPassword(auth, email, password);
@@ -107,17 +112,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const snapshot = await get(userProfileRef);
             if (snapshot.exists() && snapshot.val().disabled) {
                 await signOut(auth);
-                alert("This account has been suspended by the administrator.");
+                alert("Ushbu hisob administrator tomonidan to'xtatilgan.");
             }
-        } catch (error) { alert(`Login failed: ${error.message}`); }
+        } catch (error) { alert(`Kirishda xatolik: ${error.message}`); }
     };
 
     const registerUser = async (email, password) => {
         try {
             const cred = await createUserWithEmailAndPassword(auth, email, password);
             await set(ref(db, `users/${cred.user.uid}/profile`), { email, disabled: false });
-            alert("Registration successful!");
-        } catch (error) { alert(`Registration failed: ${error.message}`); }
+            alert("Ro'yxatdan o'tish muvaffaqiyatli!");
+        } catch (error) { alert(`Ro'yxatdan o'tishda xatolik: ${error.message}`); }
     };
 
     document.getElementById('loginForm').addEventListener('submit', (e) => {
@@ -130,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
         registerUser(document.getElementById('registerEmail').value, document.getElementById('registerPassword').value);
     });
 
-    window.logoutUser = () => signOut(auth);
+    document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
 
     document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -139,41 +144,38 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentPassword = document.getElementById('currentPassword').value;
 
         if (reauthSection.style.display === 'block' && !currentPassword) {
-            return alert('Please enter your current password to re-authenticate.');
+            return alert('Qayta autentifikatsiya uchun joriy parolni kiriting.');
         }
-
-        if (!newPassword || newPassword.length < 6) return alert('New password must be at least 6 characters.');
+        if (!newPassword || newPassword.length < 6) return alert('Yangi parol kamida 6 belgidan iborat bo\'lishi kerak.');
 
         try {
             if (reauthSection.style.display === 'block') {
                 const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
                 await reauthenticateWithCredential(currentUser, credential);
             }
-
             await updatePassword(currentUser, newPassword);
-            alert('Password updated successfully!');
+            alert('Parol muvaffaqiyatli yangilandi!');
             closeModal('changePasswordModal');
-
         } catch (error) {
             if (error.code === 'auth/requires-recent-login') {
                 reauthSection.style.display = 'block';
-                alert('This is a sensitive operation. Please enter your current password to confirm.');
+                alert('Bu nozik operatsiya. Iltimos, joriy parolingizni kiritib tasdiqlang.');
             } else {
-                alert(`An error occurred: ${error.message}`);
+                alert(`Xatolik yuz berdi: ${error.message}`);
             }
         }
     });
     
     // --- AUTH STATE & NAVIGATION ---
-
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
         if (user) {
             currentUser = user;
             viewingUid = user.uid;
             authSection.style.display = 'none';
             mainApp.style.display = 'block';
-
-            if (user.email === adminEmail) {
+            const adminRef = ref(db, 'admins/' + user.uid);
+            const snapshot = await get(adminRef);
+            if (snapshot.exists()) {
                 adminControls.style.display = 'block';
                 adminNav.style.display = 'flex';
                 loadUsersForAdminDropdown();
@@ -190,12 +192,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    window.showPage = (pageId) => {
+    const showPage = (pageId) => {
         document.querySelectorAll('.page').forEach(p => { p.style.display = 'none'; });
         document.getElementById(pageId).style.display = 'block';
-        
+
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        const activeNavItem = document.querySelector(`.nav-item[onclick*="'${pageId}'"]`);
+        const activeNavItem = document.querySelector(`.nav-item[data-page='${pageId}']`);
         if(activeNavItem) activeNavItem.classList.add('active');
 
         const loadFunction = {
@@ -206,24 +208,19 @@ document.addEventListener('DOMContentLoaded', () => {
             attendancePage: loadAttendance,
             adminPage: loadAdminUserList,
         }[pageId];
-        
         if (loadFunction) loadFunction();
     };
 
     // --- DATA READ/WRITE FUNCTIONS ---
-
     const loadDashboardData = async () => {
         if (!viewingUid) return;
         const studentCountRef = ref(db, `users/${viewingUid}/students`);
         const groupCountRef = ref(db, `users/${viewingUid}/groups`);
         const paymentsRef = ref(db, `users/${viewingUid}/payments`);
-
         const studentSnapshot = await get(studentCountRef);
         document.getElementById('studentsCount').textContent = studentSnapshot.size || 0;
-
         const groupSnapshot = await get(groupCountRef);
         document.getElementById('groupsCount').textContent = groupSnapshot.size || 0;
-
         const paymentsSnapshot = await get(paymentsRef);
         let total = 0;
         if (paymentsSnapshot.exists()) {
@@ -240,9 +237,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const studentGroupSelect = document.getElementById('studentGroup');
             const attendanceGroupFilter = document.getElementById('attendanceGroupFilter');
             listEl.innerHTML = '';
-            studentGroupSelect.innerHTML = '<option value="">Select Group</option>';
-            attendanceGroupFilter.innerHTML = '<option value="all">All Groups</option>';
-
+            studentGroupSelect.innerHTML = '<option value="">Guruhni tanlang</option>';
+            attendanceGroupFilter.innerHTML = '<option value="all">Barcha guruhlar</option>';
             if (snapshot.exists()) {
                 snapshot.forEach((child) => {
                     const group = child.val();
@@ -252,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     attendanceGroupFilter.innerHTML += `<option value="${groupId}">${group.name}</option>`;
                 });
             } else {
-                listEl.innerHTML = '<p>No groups found.</p>';
+                listEl.innerHTML = '<p>Guruhlar topilmadi.</p>';
             }
         });
     };
@@ -266,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (snapshot.exists()) {
                 snapshot.forEach((child) => listEl.innerHTML += `<div class="list-item"><span>${child.val().name}</span></div>`);
             } else {
-                listEl.innerHTML = '<p>No students found.</p>';
+                listEl.innerHTML = '<p>O\'quvchilar topilmadi.</p>';
             }
         });
     };
@@ -280,10 +276,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (snapshot.exists()) {
                 snapshot.forEach((child) => {
                     const p = child.val();
-                    listEl.innerHTML += `<div class="list-item"><span>${p.studentName}: ${p.amount} so'm on ${p.date}</span></div>`;
+                    listEl.innerHTML += `<div class="list-item"><span>${p.studentName}: ${p.amount} so'm - ${p.date}</span></div>`;
                 });
             } else {
-                listEl.innerHTML = '<p>No payments found.</p>';
+                listEl.innerHTML = '<p>To\'lovlar topilmadi.</p>';
             }
         });
     };
@@ -345,13 +341,12 @@ document.addEventListener('DOMContentLoaded', () => {
         await set(ref(db, `users/${viewingUid}/attendance/${date}/${studentId}`), { present: isPresent });
     };
 
-    // --- MODALS & LISTENERS ---
     const loadStudentsForPayments = async () => {
         if (!viewingUid) return;
         const studentsRef = ref(db, `users/${viewingUid}/students`);
         const snapshot = await get(studentsRef);
         const selectEl = document.getElementById('paymentStudent');
-        selectEl.innerHTML = '<option value="">Select Student</option>';
+        selectEl.innerHTML = '<option value="">O\'quvchini tanlang</option>';
         if(snapshot.exists()) snapshot.forEach(c => { selectEl.innerHTML += `<option value="${c.key}">${c.val().name}</option>`; });
     };
 
@@ -373,15 +368,43 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('attendanceDate').addEventListener('change', loadAttendance);
     document.getElementById('attendanceGroupFilter').addEventListener('change', loadAttendance);
 
-    window.toggleAuthForms = () => {
-        const loginForm = document.getElementById('loginForm');
-        const registerForm = document.getElementById('registerForm');
-        if (loginForm.style.display === 'none') {
-            loginForm.style.display = 'block';
-            registerForm.style.display = 'none';
-        } else {
-            loginForm.style.display = 'none';
-            registerForm.style.display = 'block';
+    document.getElementById('showRegister').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('registerForm').style.display = 'block';
+    });
+
+    document.getElementById('showLogin').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('loginForm').style.display = 'block';
+        document.getElementById('registerForm').style.display = 'none';
+    });
+
+    document.getElementById('settingsBtn').addEventListener('click', () => openModal('settingsModal'));
+    document.getElementById('addStudentBtn').addEventListener('click', () => openModal('addStudentModal'));
+    document.getElementById('addGroupBtn').addEventListener('click', () => openModal('addGroupModal'));
+    document.getElementById('addPaymentBtn').addEventListener('click', () => openModal('addPaymentModal'));
+    document.getElementById('changePasswordBtn').addEventListener('click', () => {
+        closeModal('settingsModal');
+        openModal('changePasswordModal');
+    });
+
+    document.querySelectorAll('.close-modal-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const modalId = btn.dataset.modalId;
+            if (modalId) {
+                closeModal(modalId);
+            }
+        });
+    });
+
+    document.querySelector('.bottom-nav').addEventListener('click', (e) => {
+        const navItem = e.target.closest('.nav-item');
+        if (navItem) {
+            const pageId = navItem.dataset.page;
+            if (pageId) {
+                showPage(pageId);
+            }
         }
-    };
+    });
 });

@@ -225,7 +225,7 @@ main {
     color: var(--gray-color);
 }
 
-#studentsList, #groupsList, #paymentsList, #attendanceList {
+#studentsList, #groupsList, #paymentsList, #attendanceList, #adminUserManagementList {
     display: grid;
     gap: 1rem;
 }
