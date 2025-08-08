@@ -117,10 +117,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) { alert(`Kirishda xatolik: ${error.message}`); }
     };
 
-    const registerUser = async (email, password) => {
+    const registerUser = async (email, password, phone) => {
         try {
             const cred = await createUserWithEmailAndPassword(auth, email, password);
-            await set(ref(db, `users/${cred.user.uid}/profile`), { email, disabled: false });
+            await set(ref(db, `users/${cred.user.uid}/profile`), { email, phone, disabled: false });
             alert("Ro'yxatdan o'tish muvaffaqiyatli!");
         } catch (error) { alert(`Ro'yxatdan o'tishda xatolik: ${error.message}`); }
     };
@@ -132,7 +132,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('registerForm').addEventListener('submit', (e) => {
         e.preventDefault();
-        registerUser(document.getElementById('registerEmail').value, document.getElementById('registerPassword').value);
+        const email = document.getElementById('registerEmail').value;
+        const password = document.getElementById('registerPassword').value;
+        const phone = document.getElementById('registerPhone').value;
+        if (!email || !password || !phone) return alert("Iltimos, barcha maydonlarni to'ldiring.");
+        registerUser(email, password, phone);
     });
 
     document.getElementById('logoutBtn').addEventListener('click', () => {
