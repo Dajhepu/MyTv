@@ -525,53 +525,74 @@ document.addEventListener('DOMContentLoaded', () => {
         if(snapshot.exists()) snapshot.forEach(c => { selectEl.innerHTML += `<option value="${c.key}">${c.val().name}</option>`; });
     };
 
-    window.openModal = (modalId) => {
+    const openModal = (modalId) => {
         if (modalId === 'addPaymentModal') loadStudentsForPayments();
-        if (modalId === 'changePasswordModal') closeModal('settingsModal');
-        document.getElementById(modalId).style.display = 'flex';
-    };
-    window.closeModal = (modalId) => {
         const modal = document.getElementById(modalId);
-        modal.style.display = 'none';
-        if (modalId === 'changePasswordModal') {
-            document.getElementById('reauthSection').style.display = 'none';
-            document.getElementById('changePasswordForm').reset();
+        if(modal) modal.style.display = 'flex';
+    };
+
+    const closeModal = (modalId) => {
+        const modal = document.getElementById(modalId);
+        if(modal) {
+            modal.style.display = 'none';
+            const form = modal.querySelector('form');
+            if (form) {
+                try {
+                    form.reset();
+                } catch (e) {
+                    console.error(`Error resetting form in modal ${modalId}:`, e);
+                }
+            }
+            if (modalId === 'changePasswordModal') {
+                const reauthSection = document.getElementById('reauthSection');
+                if(reauthSection) reauthSection.style.display = 'none';
+            }
         }
     };
+
+    // --- UNIVERSAL EVENT LISTENERS ---
+    document.addEventListener('click', (e) => {
+        // Modal Openers
+        if(e.target.matches('#settingsBtn')) openModal('settingsModal');
+        if(e.target.matches('#addStudentBtn')) openModal('addStudentModal');
+        if(e.target.matches('#addGroupBtn')) openModal('addGroupModal');
+        if(e.target.matches('#addPaymentBtn')) openModal('addPaymentModal');
+        if(e.target.matches('#changePasswordBtn')) {
+            closeModal('settingsModal');
+            openModal('changePasswordModal');
+        }
+
+        // Modal Closers
+        if (e.target.matches('.close-btn')) {
+             const modalId = e.target.dataset.modalId;
+             if(modalId) closeModal(modalId);
+        }
+        if (e.target.matches('.modal')) {
+             closeModal(e.target.id);
+        }
+
+        // Auth Form Toggling
+        if(e.target.matches('#showRegister')) {
+            e.preventDefault();
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+        }
+        if(e.target.matches('#showLogin')) {
+            e.preventDefault();
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === "Escape") {
+            document.querySelectorAll('.modal').forEach(modal => closeModal(modal.id));
+        }
+    });
 
     document.getElementById('attendanceDate').valueAsDate = new Date();
     document.getElementById('attendanceDate').addEventListener('change', loadAttendance);
     document.getElementById('attendanceGroupFilter').addEventListener('change', loadAttendance);
-
-    document.getElementById('showRegister').addEventListener('click', (e) => {
-        e.preventDefault();
-        document.getElementById('loginForm').style.display = 'none';
-        document.getElementById('registerForm').style.display = 'block';
-    });
-
-    document.getElementById('showLogin').addEventListener('click', (e) => {
-        e.preventDefault();
-        document.getElementById('loginForm').style.display = 'block';
-        document.getElementById('registerForm').style.display = 'none';
-    });
-
-    document.getElementById('settingsBtn').addEventListener('click', () => openModal('settingsModal'));
-    document.getElementById('addStudentBtn').addEventListener('click', () => openModal('addStudentModal'));
-    document.getElementById('addGroupBtn').addEventListener('click', () => openModal('addGroupModal'));
-    document.getElementById('addPaymentBtn').addEventListener('click', () => openModal('addPaymentModal'));
-    document.getElementById('changePasswordBtn').addEventListener('click', () => {
-        closeModal('settingsModal');
-        openModal('changePasswordModal');
-    });
-
-    document.querySelectorAll('.close-modal-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const modalId = btn.dataset.modalId;
-            if (modalId) {
-                closeModal(modalId);
-            }
-        });
-    });
 
     document.querySelector('.bottom-nav').addEventListener('click', (e) => {
         const navItem = e.target.closest('.nav-item');
