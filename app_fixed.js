@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- GLOBAL STATE ---
     let currentUser = null;
-    let viewingUid = null; // For admin to view other users' data
+    let viewingUid = null;
     const adminEmail = "rahimboyislombek@gmail.com";
 
     // --- DOM ELEMENTS ---
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadUsersForAdminDropdown = async () => {
         const usersRef = ref(db, 'users');
         onValue(usersRef, (snapshot) => {
-            adminUserSelect.innerHTML = '<option value="">View Own Data</option>';
+            adminUserSelect.innerHTML = '<option value="">O\'z ma\'lumotlarim</option>';
             if (snapshot.exists()) {
                 snapshot.forEach((childSnapshot) => {
                     const user = childSnapshot.val();
@@ -67,14 +67,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     const uid = childSnapshot.key;
                     if (uid === currentUser.uid) return;
                     const user = childSnapshot.val();
-                    const email = user.profile?.email || 'N/A';
+                    const email = user.profile?.email || 'Noma\'lum';
                     const isDisabled = user.profile?.disabled || false;
                     const itemEl = document.createElement('div');
                     itemEl.className = 'list-item';
                     itemEl.innerHTML = `
                         <span>${email}</span>
                         <button class="btn ${isDisabled ? 'primary-btn' : 'danger-btn'}" style="width: auto;" onclick="toggleUserSuspension('${uid}', ${!isDisabled})">
-                            ${isDisabled ? 'Enable' : 'Suspend'}
+                            ${isDisabled ? 'Yoqish' : 'To\'xtatish'}
                         </button>
                     `;
                     listEl.appendChild(itemEl);
@@ -87,9 +87,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const userProfileRef = ref(db, `users/${uid}/profile`);
         try {
             await update(userProfileRef, { disabled: shouldDisable });
-            alert(`User account has been ${shouldDisable ? 'suspended' : 'enabled'}.`);
+            alert(`Foydalanuvchi hisobi ${shouldDisable ? 'to\'xtatildi' : 'yoqildi'}.`);
         } catch (error) {
-            alert(`Operation failed: ${error.message}`);
+            alert(`Operatsiya amalga oshmadi: ${error.message}`);
         }
     };
 
@@ -101,17 +101,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const snapshot = await get(userProfileRef);
             if (snapshot.exists() && snapshot.val().disabled) {
                 await signOut(auth);
-                alert("This account has been suspended by the administrator.");
+                alert("Ushbu hisob administrator tomonidan to'xtatilgan.");
             }
-        } catch (error) { alert(`Login failed: ${error.message}`); }
+        } catch (error) { alert(`Kirishda xatolik: ${error.message}`); }
     };
 
     const registerUser = async (email, password) => {
         try {
             const cred = await createUserWithEmailAndPassword(auth, email, password);
             await set(ref(db, `users/${cred.user.uid}/profile`), { email, disabled: false });
-            alert("Registration successful!");
-        } catch (error) { alert(`Registration failed: ${error.message}`); }
+            alert("Ro'yxatdan o'tish muvaffaqiyatli!");
+        } catch (error) { alert(`Ro'yxatdan o'tishda xatolik: ${error.message}`); }
     };
 
     document.getElementById('loginForm').addEventListener('submit', (e) => {
@@ -133,9 +133,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentPassword = document.getElementById('currentPassword').value;
 
         if (reauthSection.style.display === 'block' && !currentPassword) {
-            return alert('Please enter your current password to re-authenticate.');
+            return alert('Qayta autentifikatsiya uchun joriy parolni kiriting.');
         }
-        if (!newPassword || newPassword.length < 6) return alert('New password must be at least 6 characters.');
+        if (!newPassword || newPassword.length < 6) return alert('Yangi parol kamida 6 belgidan iborat bo\'lishi kerak.');
 
         try {
             if (reauthSection.style.display === 'block') {
@@ -143,14 +143,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 await reauthenticateWithCredential(currentUser, credential);
             }
             await updatePassword(currentUser, newPassword);
-            alert('Password updated successfully!');
+            alert('Parol muvaffaqiyatli yangilandi!');
             closeModal('changePasswordModal');
         } catch (error) {
             if (error.code === 'auth/requires-recent-login') {
                 reauthSection.style.display = 'block';
-                alert('This is a sensitive operation. Please enter your current password to confirm.');
+                alert('Bu nozik operatsiya. Iltimos, joriy parolingizni kiritib tasdiqlang.');
             } else {
-                alert(`An error occurred: ${error.message}`);
+                alert(`Xatolik yuz berdi: ${error.message}`);
             }
         }
     });
@@ -224,8 +224,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const studentGroupSelect = document.getElementById('studentGroup');
             const attendanceGroupFilter = document.getElementById('attendanceGroupFilter');
             listEl.innerHTML = '';
-            studentGroupSelect.innerHTML = '<option value="">Select Group</option>';
-            attendanceGroupFilter.innerHTML = '<option value="all">All Groups</option>';
+            studentGroupSelect.innerHTML = '<option value="">Guruhni tanlang</option>';
+            attendanceGroupFilter.innerHTML = '<option value="all">Barcha guruhlar</option>';
             if (snapshot.exists()) {
                 snapshot.forEach((child) => {
                     const group = child.val();
@@ -235,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     attendanceGroupFilter.innerHTML += `<option value="${groupId}">${group.name}</option>`;
                 });
             } else {
-                listEl.innerHTML = '<p>No groups found.</p>';
+                listEl.innerHTML = '<p>Guruhlar topilmadi.</p>';
             }
         });
     };
@@ -249,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (snapshot.exists()) {
                 snapshot.forEach((child) => listEl.innerHTML += `<div class="list-item"><span>${child.val().name}</span></div>`);
             } else {
-                listEl.innerHTML = '<p>No students found.</p>';
+                listEl.innerHTML = '<p>O\'quvchilar topilmadi.</p>';
             }
         });
     };
@@ -263,10 +263,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (snapshot.exists()) {
                 snapshot.forEach((child) => {
                     const p = child.val();
-                    listEl.innerHTML += `<div class="list-item"><span>${p.studentName}: ${p.amount} so'm on ${p.date}</span></div>`;
+                    listEl.innerHTML += `<div class="list-item"><span>${p.studentName}: ${p.amount} so'm - ${p.date}</span></div>`;
                 });
             } else {
-                listEl.innerHTML = '<p>No payments found.</p>';
+                listEl.innerHTML = '<p>To\'lovlar topilmadi.</p>';
             }
         });
     };
@@ -333,7 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const studentsRef = ref(db, `users/${viewingUid}/students`);
         const snapshot = await get(studentsRef);
         const selectEl = document.getElementById('paymentStudent');
-        selectEl.innerHTML = '<option value="">Select Student</option>';
+        selectEl.innerHTML = '<option value="">O\'quvchini tanlang</option>';
         if(snapshot.exists()) snapshot.forEach(c => { selectEl.innerHTML += `<option value="${c.key}">${c.val().name}</option>`; });
     };
 
