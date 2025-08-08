@@ -177,15 +177,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // --- AUTH STATE & NAVIGATION ---
-    onAuthStateChanged(auth, async (user) => {
+    onAuthStateChanged(auth, (user) => {
         if (user) {
             currentUser = user;
             viewingUid = user.uid;
             authSection.style.display = 'none';
             mainApp.style.display = 'block';
-            const adminRef = ref(db, 'admins/' + user.uid);
-            const snapshot = await get(adminRef);
-            if (snapshot.exists()) {
+
+            if (user.email === adminEmail) {
                 adminControls.style.display = 'block';
                 adminNav.style.display = 'flex';
                 loadUsersForAdminDropdown();
