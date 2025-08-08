@@ -1,17 +1,17 @@
 {
   "rules": {
+    "admins": {
+      ".read": "auth != null",
+      ".write": false
+    },
     "users": {
       "$uid": {
-        // A user can read and write to their own data node.
-        ".read": "$uid === auth.uid",
-        ".write": "$uid === auth.uid"
-      },
-      // Admin access rules
-      // The admin user gets full read/write access to all of /users.
-      // IMPORTANT: Replace 'ADMIN_USER_UID_PLACEHOLDER' with the actual UID of the admin user (rahimboyislombek@gmail.com).
-      // You can find the UID in the Firebase console under Authentication -> Users.
-      ".read": "auth.uid === 'ADMIN_USER_UID_PLACEHOLDER'",
-      ".write": "auth.uid === 'ADMIN_USER_UID_PLACEHOLDER'"
+        ".read": "auth != null && ($uid === auth.uid || root.child('admins').child(auth.uid).exists())",
+        ".write": "auth != null && $uid === auth.uid",
+        "profile": {
+            ".validate": "newData.hasChildren(['email', 'disabled'])"
+        }
+      }
     }
   }
 }

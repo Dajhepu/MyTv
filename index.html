@@ -22,8 +22,8 @@
           <i class="fas fa-lock"></i>
           <input type="password" id="loginPassword" placeholder="Parol">
         </div>
-        <button class="btn primary-btn" onclick="loginUser()">Kirish</button>
-        <p class="auth-switch">Akkauntingiz yo'qmi? <a href="#" onclick="toggleAuthForms()">Ro'yxatdan o'tish</a></p>
+        <button type="submit" class="btn primary-btn">Kirish</button>
+        <p class="auth-switch">Akkauntingiz yo'qmi? <a href="#" id="showRegister">Ro'yxatdan o'tish</a></p>
       </div>
       <div id="registerForm" style="display: none;">
         <div class="input-group">
@@ -34,8 +34,8 @@
           <i class="fas fa-lock"></i>
           <input type="password" id="registerPassword" placeholder="Parol">
         </div>
-        <button class="btn primary-btn" onclick="registerUser()">Ro'yxatdan o'tish</button>
-        <p class="auth-switch">Akkauntingiz bormi? <a href="#" onclick="toggleAuthForms()">Kirish</a></p>
+        <button type="submit" class="btn primary-btn">Ro'yxatdan o'tish</button>
+        <p class="auth-switch">Akkauntingiz bormi? <a href="#" id="showLogin">Kirish</a></p>
       </div>
     </div>
   </div>
@@ -48,10 +48,10 @@
         <div id="adminControls" style="display: none;">
           <select id="adminUserSelect"></select>
         </div>
-        <button class="btn" style="background: none; width: auto; padding: 0.5rem;" onclick="openModal('settingsModal')">
+        <button id="settingsBtn" class="btn" style="background: none; width: auto; padding: 0.5rem;">
             <i class="fas fa-cog" style="font-size: 1.5rem; color: white;"></i>
         </button>
-        <button class="btn logout-btn" onclick="logoutUser()">
+        <button id="logoutBtn" class="btn logout-btn">
           <i class="fas fa-sign-out-alt"></i> Chiqish
         </button>
       </div>
@@ -83,7 +83,7 @@
       <section id="studentsPage" class="page" style="display: none;">
         <div class="page-header">
           <h2>O'quvchilar</h2>
-          <button class="btn primary-btn" onclick="openModal('addStudentModal')"><i class="fas fa-plus"></i> O'quvchi qo'shish</button>
+          <button id="addStudentBtn" class="btn primary-btn"><i class="fas fa-plus"></i> O'quvchi qo'shish</button>
         </div>
         <div id="studentsList"></div>
       </section>
@@ -92,7 +92,7 @@
       <section id="groupsPage" class="page" style="display: none;">
         <div class="page-header">
           <h2>Guruhlar</h2>
-          <button class="btn primary-btn" onclick="openModal('addGroupModal')"><i class="fas fa-plus"></i> Guruh qo'shish</button>
+          <button id="addGroupBtn" class="btn primary-btn"><i class="fas fa-plus"></i> Guruh qo'shish</button>
         </div>
         <div id="groupsList"></div>
       </section>
@@ -113,7 +113,7 @@
       <section id="paymentsPage" class="page" style="display: none;">
         <div class="page-header">
           <h2>To'lovlar</h2>
-          <button class="btn primary-btn" onclick="openModal('addPaymentModal')"><i class="fas fa-plus"></i> To'lov qo'shish</button>
+          <button id="addPaymentBtn" class="btn primary-btn"><i class="fas fa-plus"></i> To'lov qo'shish</button>
         </div>
         <div id="paymentsList"></div>
       </section>
@@ -128,12 +128,12 @@
     </main>
 
     <nav class="bottom-nav">
-      <div class="nav-item active" onclick="showPage('dashboardPage')"><i class="fas fa-home"></i><span>Bosh sahifa</span></div>
-      <div class="nav-item" onclick="showPage('studentsPage')"><i class="fas fa-user-graduate"></i><span>O'quvchilar</span></div>
-      <div class="nav-item" onclick="showPage('groupsPage')"><i class="fas fa-users"></i><span>Guruhlar</span></div>
-      <div class="nav-item" onclick="showPage('attendancePage')"><i class="fas fa-calendar-check"></i><span>Davomat</span></div>
-      <div class="nav-item" onclick="showPage('paymentsPage')"><i class="fas fa-money-bill-wave"></i><span>To'lovlar</span></div>
-      <div id="adminNav" class="nav-item" style="display: none;" onclick="showPage('adminPage')"><i class="fas fa-user-shield"></i><span>Admin</span></div>
+      <div class="nav-item active" data-page="dashboardPage"><i class="fas fa-home"></i><span>Bosh sahifa</span></div>
+      <div class="nav-item" data-page="studentsPage"><i class="fas fa-user-graduate"></i><span>O'quvchilar</span></div>
+      <div class="nav-item" data-page="groupsPage"><i class="fas fa-users"></i><span>Guruhlar</span></div>
+      <div class="nav-item" data-page="attendancePage"><i class="fas fa-calendar-check"></i><span>Davomat</span></div>
+      <div class="nav-item" data-page="paymentsPage"><i class="fas fa-money-bill-wave"></i><span>To'lovlar</span></div>
+      <div id="adminNav" class="nav-item" style="display: none;" data-page="adminPage"><i class="fas fa-user-shield"></i><span>Admin</span></div>
     </nav>
   </div>
 
@@ -141,7 +141,7 @@
   <!-- Add Student Modal -->
   <div id="addStudentModal" class="modal">
     <div class="modal-content">
-      <span class="close-btn" onclick="closeModal('addStudentModal')">&times;</span>
+      <span class="close-btn close-modal-btn" data-modal-id="addStudentModal">&times;</span>
       <h3>O'quvchi qo'shish</h3>
       <form id="addStudentForm">
         <input type="text" id="studentName" placeholder="Ismi" required>
@@ -155,7 +155,7 @@
   <!-- Add Group Modal -->
   <div id="addGroupModal" class="modal">
       <div class="modal-content">
-          <span class="close-btn" onclick="closeModal('addGroupModal')">&times;</span>
+          <span class="close-btn close-modal-btn" data-modal-id="addGroupModal">&times;</span>
           <h3>Guruh qo'shish</h3>
           <form id="addGroupForm">
               <input type="text" id="groupName" placeholder="Guruh nomi" required>
@@ -168,7 +168,7 @@
   <!-- Add Payment Modal -->
   <div id="addPaymentModal" class="modal">
       <div class="modal-content">
-          <span class="close-btn" onclick="closeModal('addPaymentModal')">&times;</span>
+          <span class="close-btn close-modal-btn" data-modal-id="addPaymentModal">&times;</span>
           <h3>To'lov qo'shish</h3>
           <form id="addPaymentForm">
               <select id="paymentStudent" required></select>
@@ -182,10 +182,10 @@
   <!-- Settings Modal -->
   <div id="settingsModal" class="modal">
       <div class="modal-content">
-          <span class="close-btn" onclick="closeModal('settingsModal')">&times;</span>
+          <span class="close-btn close-modal-btn" data-modal-id="settingsModal">&times;</span>
           <h3>Sozlamalar</h3>
           <div class="settings-content">
-              <button class="btn primary-btn" onclick="openModal('changePasswordModal'); closeModal('settingsModal');">Parolni o'zgartirish</button>
+              <button id="changePasswordBtn" class="btn primary-btn">Parolni o'zgartirish</button>
               <p style="margin-top: 2rem; text-align: center; color: var(--gray-color);">
                   Qo'llab-quvvatlash uchun telegramdan <a href="https://t.me/Dajhepu" target="_blank">@Dajhepu</a> ga yozing.
               </p>
@@ -196,7 +196,7 @@
   <!-- Change Password Modal -->
   <div id="changePasswordModal" class="modal">
       <div class="modal-content">
-          <span class="close-btn" onclick="closeModal('changePasswordModal')">&times;</span>
+          <span class="close-btn close-modal-btn" data-modal-id="changePasswordModal">&times;</span>
           <h3>Parolni o'zgartirish</h3>
           <form id="changePasswordForm">
               <div id="newPasswordSection">

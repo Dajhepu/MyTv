@@ -156,13 +156,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- AUTH STATE & NAVIGATION ---
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
         if (user) {
             currentUser = user;
             viewingUid = user.uid;
             authSection.style.display = 'none';
             mainApp.style.display = 'block';
-            if (user.email === adminEmail) {
+
+            // Check for admin status
+            const adminRef = ref(db, 'admins/' + user.uid);
+            const snapshot = await get(adminRef);
+            if (snapshot.exists()) {
                 adminControls.style.display = 'block';
                 adminNav.style.display = 'flex';
                 loadUsersForAdminDropdown();
@@ -170,6 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 adminControls.style.display = 'none';
                 adminNav.style.display = 'none';
             }
+
             showPage('dashboardPage');
         } else {
             currentUser = null;
@@ -355,15 +360,50 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('attendanceDate').addEventListener('change', loadAttendance);
     document.getElementById('attendanceGroupFilter').addEventListener('change', loadAttendance);
 
-    window.toggleAuthForms = () => {
-        const loginForm = document.getElementById('loginForm');
-        const registerForm = document.getElementById('registerForm');
-        if (loginForm.style.display === 'none') {
-            loginForm.style.display = 'block';
-            registerForm.style.display = 'none';
-        } else {
-            loginForm.style.display = 'none';
-            registerForm.style.display = 'block';
+    // --- EVENT LISTENERS ---
+
+    // Auth form toggling
+    document.getElementById('showRegister').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('registerForm').style.display = 'block';
+    });
+
+    document.getElementById('showLogin').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('loginForm').style.display = 'block';
+        document.getElementById('registerForm').style.display = 'none';
+    });
+
+    // Main navigation
+    document.querySelector('.bottom-nav').addEventListener('click', (e) => {
+        const navItem = e.target.closest('.nav-item');
+        if (navItem) {
+            const pageId = navItem.dataset.page;
+            if (pageId) {
+                showPage(pageId);
+            }
         }
-    };
+    });
+
+    // Modal buttons
+    document.getElementById('settingsBtn').addEventListener('click', () => openModal('settingsModal'));
+    document.getElementById('logoutBtn').addEventListener('click', () => logoutUser());
+    document.getElementById('addStudentBtn').addEventListener('click', () => openModal('addStudentModal'));
+    document.getElementById('addGroupBtn').addEventListener('click', () => openModal('addGroupModal'));
+    document.getElementById('addPaymentBtn').addEventListener('click', () => openModal('addPaymentModal'));
+    document.getElementById('changePasswordBtn').addEventListener('click', () => {
+        closeModal('settingsModal');
+        openModal('changePasswordModal');
+    });
+
+    // Close all modals
+    document.querySelectorAll('.close-modal-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const modalId = btn.dataset.modalId;
+            if (modalId) {
+                closeModal(modalId);
+            }
+        });
+    });
 });
