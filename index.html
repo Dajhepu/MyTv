@@ -13,30 +13,34 @@
   <div id="authSection">
     <div class="auth-container">
       <h2>Kirish</h2>
-      <div id="loginForm">
+      <form id="loginForm">
         <div class="input-group">
+          <label for="loginEmail" class="visually-hidden">Elektron pochta</label>
           <i class="fas fa-envelope"></i>
-          <input type="email" id="loginEmail" placeholder="Elektron pochta">
+          <input type="email" id="loginEmail" placeholder="Elektron pochta" required>
         </div>
         <div class="input-group">
+          <label for="loginPassword" class="visually-hidden">Parol</label>
           <i class="fas fa-lock"></i>
-          <input type="password" id="loginPassword" placeholder="Parol">
+          <input type="password" id="loginPassword" placeholder="Parol" required>
         </div>
         <button type="submit" class="btn primary-btn">Kirish</button>
         <p class="auth-switch">Akkauntingiz yo'qmi? <a href="#" id="showRegister">Ro'yxatdan o'tish</a></p>
-      </div>
-      <div id="registerForm" style="display: none;">
+      </form>
+      <form id="registerForm" style="display: none;">
         <div class="input-group">
+          <label for="registerEmail" class="visually-hidden">Elektron pochta</label>
           <i class="fas fa-envelope"></i>
-          <input type="email" id="registerEmail" placeholder="Elektron pochta">
+          <input type="email" id="registerEmail" placeholder="Elektron pochta" required>
         </div>
         <div class="input-group">
+          <label for="registerPassword" class="visually-hidden">Parol</label>
           <i class="fas fa-lock"></i>
-          <input type="password" id="registerPassword" placeholder="Parol">
+          <input type="password" id="registerPassword" placeholder="Parol" required>
         </div>
         <button type="submit" class="btn primary-btn">Ro'yxatdan o'tish</button>
         <p class="auth-switch">Akkauntingiz bormi? <a href="#" id="showLogin">Kirish</a></p>
-      </div>
+      </form>
     </div>
   </div>
 
@@ -46,12 +50,12 @@
       <h1>CRM</h1>
       <div class="user-info">
         <div id="adminControls" style="display: none;">
-          <select id="adminUserSelect"></select>
+          <select id="adminUserSelect" aria-label="Foydalanuvchini tanlang"></select>
         </div>
-        <button id="settingsBtn" class="btn" style="background: none; width: auto; padding: 0.5rem;">
+        <button id="settingsBtn" class="btn" style="background: none; width: auto; padding: 0.5rem;" aria-label="Sozlamalar">
             <i class="fas fa-cog" style="font-size: 1.5rem; color: white;"></i>
         </button>
-        <button id="logoutBtn" class="btn logout-btn">
+        <button id="logoutBtn" class="btn logout-btn" aria-label="Chiqish">
           <i class="fas fa-sign-out-alt"></i> Chiqish
         </button>
       </div>
@@ -144,8 +148,11 @@
       <span class="close-btn close-modal-btn" data-modal-id="addStudentModal">&times;</span>
       <h3>O'quvchi qo'shish</h3>
       <form id="addStudentForm">
+        <label for="studentName" class="visually-hidden">O'quvchi ismi</label>
         <input type="text" id="studentName" placeholder="Ismi" required>
+        <label for="studentPhone" class="visually-hidden">Telefon raqami</label>
         <input type="text" id="studentPhone" placeholder="Telefon raqami">
+        <label for="studentGroup" class="visually-hidden">Guruh</label>
         <select id="studentGroup" required></select>
         <button type="submit" class="btn primary-btn">Saqlash</button>
       </form>
@@ -158,7 +165,9 @@
           <span class="close-btn close-modal-btn" data-modal-id="addGroupModal">&times;</span>
           <h3>Guruh qo'shish</h3>
           <form id="addGroupForm">
+              <label for="groupName" class="visually-hidden">Guruh nomi</label>
               <input type="text" id="groupName" placeholder="Guruh nomi" required>
+              <label for="groupTeacher" class="visually-hidden">O'qituvchi</label>
               <input type="text" id="groupTeacher" placeholder="O'qituvchi" required>
               <button type="submit" class="btn primary-btn">Saqlash</button>
           </form>
@@ -171,8 +180,11 @@
           <span class="close-btn close-modal-btn" data-modal-id="addPaymentModal">&times;</span>
           <h3>To'lov qo'shish</h3>
           <form id="addPaymentForm">
+              <label for="paymentStudent" class="visually-hidden">O'quvchi</label>
               <select id="paymentStudent" required></select>
+              <label for="paymentAmount" class="visually-hidden">Miqdori</label>
               <input type="number" id="paymentAmount" placeholder="Miqdori" required>
+              <label for="paymentDate" class="visually-hidden">Sana</label>
               <input type="date" id="paymentDate" required>
               <button type="submit" class="btn primary-btn">Saqlash</button>
           </form>
@@ -200,10 +212,12 @@
           <h3>Parolni o'zgartirish</h3>
           <form id="changePasswordForm">
               <div id="newPasswordSection">
+                  <label for="newPassword" class="visually-hidden">Yangi parol</label>
                   <input type="password" id="newPassword" placeholder="Yangi parol" required>
               </div>
               <div id="reauthSection" style="display: none;">
                   <p>Xavfsizlik uchun joriy parolingizni qayta kiriting:</p>
+                  <label for="currentPassword" class="visually-hidden">Joriy parol</label>
                   <input type="password" id="currentPassword" placeholder="Joriy parol">
               </div>
               <button type="submit" class="btn primary-btn">Saqlash</button>
