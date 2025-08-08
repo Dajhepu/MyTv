@@ -135,7 +135,13 @@ document.addEventListener('DOMContentLoaded', () => {
         registerUser(document.getElementById('registerEmail').value, document.getElementById('registerPassword').value);
     });
 
-    document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        // Close all modals before logging out
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.style.display = 'none';
+        });
+        signOut(auth);
+    });
 
     document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -229,6 +235,38 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('paymentsTotal').textContent = `${total} so'm`;
     };
 
+    const deleteGroup = async (groupId) => {
+        if (!viewingUid || !groupId) return;
+        if (confirm("Haqiqatan ham ushbu guruhni o'chirmoqchimisiz?")) {
+            try {
+                await remove(ref(db, `users/${viewingUid}/groups/${groupId}`));
+                alert("Guruh o'chirildi.");
+            } catch (error) {
+                alert(`Xatolik: ${error.message}`);
+            }
+        }
+    };
+
+    document.getElementById('groupsList').addEventListener('click', async (e) => {
+        if (e.target.tagName === 'BUTTON' && e.target.dataset.id) {
+            const action = e.target.dataset.action;
+            const groupId = e.target.dataset.id;
+            if (action === 'delete') {
+                deleteGroup(groupId);
+            } else if (action === 'edit') {
+                const groupRef = ref(db, `users/${viewingUid}/groups/${groupId}`);
+                const snapshot = await get(groupRef);
+                if (snapshot.exists()) {
+                    const group = snapshot.val();
+                    document.getElementById('editGroupId').value = groupId;
+                    document.getElementById('editGroupName').value = group.name;
+                    document.getElementById('editGroupTeacher').value = group.teacher;
+                    openModal('editGroupModal');
+                }
+            }
+        }
+    });
+
     const loadGroups = async () => {
         if (!viewingUid) return;
         const groupsRef = ref(db, `users/${viewingUid}/groups`);
@@ -243,7 +281,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 snapshot.forEach((child) => {
                     const group = child.val();
                     const groupId = child.key;
-                    listEl.innerHTML += `<div class="list-item"><span>${group.name} (${group.teacher})</span></div>`;
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'list-item';
+                    itemEl.innerHTML = `
+                        <span>${group.name} (${group.teacher})</span>
+                        <div>
+                            <button class="btn" style="width: auto; font-size: 0.8rem; padding: 0.25rem 0.5rem; margin-right: 0.5rem;" data-id="${groupId}" data-action="edit">Tahrirlash</button>
+                            <button class="btn danger-btn" style="width: auto; font-size: 0.8rem; padding: 0.25rem 0.5rem;" data-id="${groupId}" data-action="delete">O'chirish</button>
+                        </div>
+                    `;
+                    listEl.appendChild(itemEl);
                     studentGroupSelect.innerHTML += `<option value="${groupId}">${group.name}</option>`;
                     attendanceGroupFilter.innerHTML += `<option value="${groupId}">${group.name}</option>`;
                 });
@@ -253,6 +300,79 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    const deleteStudent = async (studentId) => {
+        if (!viewingUid || !studentId) return;
+        if (confirm("Haqiqatan ham ushbu o'quvchini o'chirmoqchimisiz?")) {
+            try {
+                await remove(ref(db, `users/${viewingUid}/students/${studentId}`));
+                alert("O'quvchi o'chirildi.");
+            } catch (error) {
+                alert(`Xatolik: ${error.message}`);
+            }
+        }
+    };
+
+    document.getElementById('studentsList').addEventListener('click', async (e) => {
+        if (e.target.tagName === 'BUTTON' && e.target.dataset.id) {
+            const action = e.target.dataset.action;
+            const studentId = e.target.dataset.id;
+
+            if (action === 'delete') {
+                deleteStudent(studentId);
+            } else if (action === 'edit') {
+                const studentRef = ref(db, `users/${viewingUid}/students/${studentId}`);
+                const snapshot = await get(studentRef);
+                if (snapshot.exists()) {
+                    const student = snapshot.val();
+                    document.getElementById('editStudentId').value = studentId;
+                    document.getElementById('editStudentName').value = student.name;
+                    document.getElementById('editStudentPhone').value = student.phone || '';
+
+                    // Populate and select the correct group
+                    const groupSelect = document.getElementById('editStudentGroup');
+                    const groupsRef = ref(db, `users/${viewingUid}/groups`);
+                    const groupsSnapshot = await get(groupsRef);
+                    groupSelect.innerHTML = '<option value="">Guruhni tanlang</option>';
+                    if (groupsSnapshot.exists()) {
+                        groupsSnapshot.forEach(groupSnap => {
+                            const option = document.createElement('option');
+                            option.value = groupSnap.key;
+                            option.textContent = groupSnap.val().name;
+                            if (groupSnap.key === student.groupId) {
+                                option.selected = true;
+                            }
+                            groupSelect.appendChild(option);
+                        });
+                    }
+                    openModal('editStudentModal');
+                }
+            }
+        }
+    });
+
+    document.getElementById('editStudentForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const studentId = document.getElementById('editStudentId').value;
+        const studentName = document.getElementById('editStudentName').value;
+        const studentPhone = document.getElementById('editStudentPhone').value;
+        const groupId = document.getElementById('editStudentGroup').value;
+
+        if (!studentId || !studentName || !groupId || !viewingUid) return;
+
+        const studentRef = ref(db, `users/${viewingUid}/students/${studentId}`);
+        try {
+            await update(studentRef, {
+                name: studentName,
+                phone: studentPhone,
+                groupId: groupId
+            });
+            alert('O\'quvchi ma\'lumotlari yangilandi!');
+            closeModal('editStudentModal');
+        } catch (error) {
+            alert(`Xatolik: ${error.message}`);
+        }
+    });
+
     const loadStudents = async () => {
         if (!viewingUid) return;
         const studentsRef = ref(db, `users/${viewingUid}/students`);
@@ -260,12 +380,43 @@ document.addEventListener('DOMContentLoaded', () => {
             const listEl = document.getElementById('studentsList');
             listEl.innerHTML = '';
             if (snapshot.exists()) {
-                snapshot.forEach((child) => listEl.innerHTML += `<div class="list-item"><span>${child.val().name}</span></div>`);
+                snapshot.forEach((child) => {
+                    const student = child.val();
+                    const studentId = child.key;
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'list-item';
+                    itemEl.innerHTML = `
+                        <span>${student.name}</span>
+                        <div>
+                            <button class="btn" style="width: auto; font-size: 0.8rem; padding: 0.25rem 0.5rem; margin-right: 0.5rem;" data-id="${studentId}" data-action="edit">Tahrirlash</button>
+                            <button class="btn danger-btn" style="width: auto; font-size: 0.8rem; padding: 0.25rem 0.5rem;" data-id="${studentId}" data-action="delete">O'chirish</button>
+                        </div>
+                    `;
+                    listEl.appendChild(itemEl);
+                });
             } else {
                 listEl.innerHTML = '<p>O\'quvchilar topilmadi.</p>';
             }
         });
     };
+
+    const deletePayment = async (paymentId) => {
+        if (!viewingUid || !paymentId) return;
+        if (confirm("Haqiqatan ham ushbu to'lovni o'chirmoqchimisiz?")) {
+            try {
+                await remove(ref(db, `users/${viewingUid}/payments/${paymentId}`));
+                alert("To'lov o'chirildi.");
+            } catch (error) {
+                alert(`Xatolik: ${error.message}`);
+            }
+        }
+    };
+
+    document.getElementById('paymentsList').addEventListener('click', (e) => {
+        if (e.target.tagName === 'BUTTON' && e.target.dataset.id) {
+            deletePayment(e.target.dataset.id);
+        }
+    });
 
     const loadPayments = async () => {
         if (!viewingUid) return;
@@ -276,7 +427,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (snapshot.exists()) {
                 snapshot.forEach((child) => {
                     const p = child.val();
-                    listEl.innerHTML += `<div class="list-item"><span>${p.studentName}: ${p.amount} so'm - ${p.date}</span></div>`;
+                    const paymentId = child.key;
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'list-item';
+                    itemEl.innerHTML = `
+                        <span>${p.studentName}: ${p.amount} so'm - ${p.date}</span>
+                        <button class="btn danger-btn" style="width: auto; font-size: 0.8rem; padding: 0.25rem 0.5rem;" data-id="${paymentId}">O'chirish</button>
+                    `;
+                    listEl.appendChild(itemEl);
                 });
             } else {
                 listEl.innerHTML = '<p>To\'lovlar topilmadi.</p>';
@@ -323,6 +481,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!groupName || !groupTeacher || !viewingUid) return;
         await push(ref(db, `users/${viewingUid}/groups`), { name: groupName, teacher: groupTeacher });
         closeModal('addGroupModal');
+    });
+
+    document.getElementById('editGroupForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const groupId = document.getElementById('editGroupId').value;
+        const groupName = document.getElementById('editGroupName').value;
+        const groupTeacher = document.getElementById('editGroupTeacher').value;
+        if (!groupId || !groupName || !groupTeacher || !viewingUid) return;
+
+        const groupRef = ref(db, `users/${viewingUid}/groups/${groupId}`);
+        try {
+            await update(groupRef, { name: groupName, teacher: groupTeacher });
+            alert('Guruh muvaffaqiyatli yangilandi!');
+            closeModal('editGroupModal');
+        } catch (error) {
+            alert(`Xatolik: ${error.message}`);
+        }
     });
 
     document.getElementById('addPaymentForm').addEventListener('submit', async (e) => {

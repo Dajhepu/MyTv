@@ -158,6 +158,23 @@
     </div>
   </div>
 
+  <div id="editStudentModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" data-modal-id="editStudentModal">&times;</span>
+      <h3>O'quvchini tahrirlash</h3>
+      <form id="editStudentForm">
+        <input type="hidden" id="editStudentId">
+        <label for="editStudentName" class="visually-hidden">O'quvchi ismi</label>
+        <input type="text" id="editStudentName" placeholder="Ismi" required>
+        <label for="editStudentPhone" class="visually-hidden">Telefon raqami</label>
+        <input type="tel" id="editStudentPhone" placeholder="Telefon raqami">
+        <label for="editStudentGroup" class="visually-hidden">Guruh</label>
+        <select id="editStudentGroup" required aria-label="Guruhni tanlang"></select>
+        <button type="submit" class="btn primary-btn">Yangilash</button>
+      </form>
+    </div>
+  </div>
+
   <div id="addGroupModal" class="modal">
       <div class="modal-content">
           <span class="close-btn" data-modal-id="addGroupModal">&times;</span>
@@ -170,6 +187,21 @@
               <button type="submit" class="btn primary-btn">Saqlash</button>
           </form>
       </div>
+  </div>
+
+  <div id="editGroupModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" data-modal-id="editGroupModal">&times;</span>
+        <h3>Guruhni tahrirlash</h3>
+        <form id="editGroupForm">
+            <input type="hidden" id="editGroupId">
+            <label for="editGroupName" class="visually-hidden">Guruh nomi</label>
+            <input type="text" id="editGroupName" placeholder="Guruh nomi" required>
+            <label for="editGroupTeacher" class="visually-hidden">O'qituvchi</label>
+            <input type="text" id="editGroupTeacher" placeholder="O'qituvchi" required>
+            <button type="submit" class="btn primary-btn">Yangilash</button>
+        </form>
+    </div>
   </div>
 
   <div id="addPaymentModal" class="modal">
