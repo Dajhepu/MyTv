@@ -370,16 +370,51 @@ main {
 }
 
 /* --- ADMIN PANEL --- */
+#adminPage .page-header {
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 1rem;
+}
+
+#adminUserManagementList {
+    background-color: var(--white-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+#adminUserManagementList .list-item {
+    border-bottom: 1px solid #e9ecef;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 1rem 1.25rem;
+}
+
+#adminUserManagementList .list-item:last-child {
+    border-bottom: none;
+}
+
+/* Override the default hover effect for admin list */
+#adminUserManagementList .list-item:hover {
+    transform: none;
+    background-color: #f8f9fe;
+}
+
 #adminUserManagementList .list-item span {
     font-weight: 500;
+    color: var(--dark-color);
 }
 
 #adminUserManagementList .list-item .btn {
     font-size: 0.8rem;
-    padding: 0.25rem 0.75rem;
-    width: auto;
+    padding: 0.4rem 0.8rem;
+    width: 100px; /* Give buttons a fixed width */
+    text-align: center;
     text-transform: none;
     letter-spacing: 0;
+}
+
+#adminUserManagementList .list-item .btn.primary-btn {
+    background-color: var(--success-color);
 }
 
 /* --- MEDIA QUERIES FOR MOBILE --- */

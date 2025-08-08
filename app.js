@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- GLOBAL STATE ---
     let currentUser = null;
     let viewingUid = null;
+    // TODO: Replace hardcoded admin email with a more robust role management system (e.g., using a dedicated 'roles' node in Firebase or custom claims)
     const adminEmail = "rahimboyislombek@gmail.com";
 
     // --- DOM ELEMENTS ---
@@ -74,7 +75,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     itemEl.innerHTML = `
                         <span>${email}</span>
                         <button class="btn ${isDisabled ? 'primary-btn' : 'danger-btn'}"
-                                style="width: auto;"
                                 data-uid="${uid}"
                                 data-disable="${!isDisabled}">
                             ${isDisabled ? 'Yoqish' : 'To\'xtatish'}
@@ -451,19 +451,42 @@ document.addEventListener('DOMContentLoaded', () => {
         const groupId = document.getElementById('attendanceGroupFilter').value;
         const studentsRef = ref(db, `users/${viewingUid}/students`);
         const listEl = document.getElementById('attendanceList');
-        listEl.innerHTML = '';
-        const snapshot = await get(studentsRef);
-        if (snapshot.exists()) {
-            snapshot.forEach(async (child) => {
+        listEl.innerHTML = 'Yuklanmoqda...'; // Show a loading indicator
+
+        try {
+            const snapshot = await get(studentsRef);
+            if (!snapshot.exists()) {
+                listEl.innerHTML = '<p>O\'quvchilar topilmadi.</p>';
+                return;
+            }
+
+            const attendancePromises = [];
+            snapshot.forEach((child) => {
                 const student = child.val();
                 const studentId = child.key;
                 if (groupId === 'all' || student.groupId === groupId) {
                     const attRef = ref(db, `users/${viewingUid}/attendance/${date}/${studentId}`);
-                    const attSnapshot = await get(attRef);
-                    const isPresent = attSnapshot.exists() && attSnapshot.val().present;
-                    listEl.innerHTML += `<div class="list-item"><span>${student.name}</span><input type="checkbox" ${isPresent ? 'checked' : ''} onchange="updateAttendance('${date}', '${studentId}', this.checked)"></div>`;
+                    // Create a promise to fetch attendance for each student
+                    const attendancePromise = get(attRef).then(attSnapshot => {
+                        const isPresent = attSnapshot.exists() && attSnapshot.val().present;
+                        return `<div class="list-item"><span>${student.name}</span><input type="checkbox" ${isPresent ? 'checked' : ''} onchange="updateAttendance('${date}', '${studentId}', this.checked)"></div>`;
+                    });
+                    attendancePromises.push(attendancePromise);
                 }
             });
+
+            if (attendancePromises.length === 0) {
+                 listEl.innerHTML = '<p>Bu guruhda o\'quvchilar yo\'q.</p>';
+                 return;
+            }
+
+            // Wait for all attendance data to be fetched
+            const listItemsHtml = await Promise.all(attendancePromises);
+            listEl.innerHTML = listItemsHtml.join('');
+
+        } catch (error) {
+            console.error("Davomatni yuklashda xatolik:", error);
+            listEl.innerHTML = '<p>Ma\'lumotlarni yuklashda xatolik yuz berdi.</p>';
         }
     };
 
